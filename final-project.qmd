@@ -5,27 +5,50 @@ format:
         embed-resources: true
 ---
 
-## Markdown
+```{r}
+raw_data <- read.csv("data/raw-data/WBL2024-1-0-Historical-Panel-Data.csv")
 
-Markdown is an easy to read and write text format:
-
-- It's _plain text_ so works well with version control
-- It can be **rendered** into HTML, PDF, and more
-- Learn more at: <https://quarto.org/docs/authoring/>
-
-## Code Cell
-
-Here is a Python code cell:
-
-```{python}
-import os
-os.cpu_count()
+#print head of dataset
+head(raw_data)
 ```
 
-## Equation
+```{r}
+#create data frame for 2023 data
+vector_2023 <- raw_data$Report.Year == 2023
+clean_df <- raw_data[vector_2023, ]
 
-Use LaTeX to write equations:
+head(clean_df)
+```
+```{r}
+#sum any missing values
+sum(is.na(clean_df))
+```
+```{r}
+#check for unique values in the region column for sorting
+unique(clean_df$Region)
 
-$$
-\chi' = \sum_{i=1}^n k_i s_i^2
-$$
+#sort into separate data frames by region
+subgroup1 <- clean_df$Region == "South Asia"
+south_asia <- clean_df[subgroup1, ]
+subgroup2 <- clean_df$Region == "Middle East & North Africa"
+m_east_n_africa <- clean_df[subgroup2, ]
+subgroup3 <- clean_df$Region == "Latin America & Caribbean"
+l_america_carib <- clean_df[subgroup3, ]
+subgroup4 <- clean_df$Region == "East Asia & Pacific"
+e_asia_pacific <- clean_df[subgroup4, ]
+subgroup5 <- clean_df$Region == "Europe & Central Asia"
+euro_c_asia <- clean_df[subgroup5, ]
+subgroup6 <- clean_df$Region == "Sub-Saharan Africa"
+sub_africa <- clean_df[subgroup6, ]
+subgroup7 <- clean_df$Region == "High income: OECD"
+high_income <- clean_df[subgroup7, ]
+
+head(high_income)
+
+```
+```{r}
+
+```
+
+
+
