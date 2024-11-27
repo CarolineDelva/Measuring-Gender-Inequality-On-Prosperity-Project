@@ -5,27 +5,124 @@ format:
         embed-resources: true
 ---
 
-## Markdown
+```{r}
+raw_data <- read.csv("data/raw-data/WBL2024-1-0-Historical-Panel-Data.csv")
 
-Markdown is an easy to read and write text format:
-
-- It's _plain text_ so works well with version control
-- It can be **rendered** into HTML, PDF, and more
-- Learn more at: <https://quarto.org/docs/authoring/>
-
-## Code Cell
-
-Here is a Python code cell:
-
-```{python}
-import os
-os.cpu_count()
+#print head of dataset
+head(raw_data)
 ```
 
-## Equation
+```{r}
+#create data frame for 2018 data
+vector_2018 <- raw_data$Report.Year == 2018
+clean_df <- raw_data[vector_2018, ]
 
-Use LaTeX to write equations:
+head(clean_df)
+```
 
-$$
-\chi' = \sum_{i=1}^n k_i s_i^2
-$$
+
+
+```{r}
+#create data frame for 2018 data
+vector_2018 <- raw_data$Report.Year == 2018
+clean_df <- raw_data[vector_2018, ]
+
+head(clean_df)
+```
+```{r}
+#sum any missing values
+sum(is.na(clean_df))
+```
+```{r}
+#check for unique values in the region column for sorting
+unique(clean_df$Region)
+
+#sort into separate data frames by region
+subgroup1 <- clean_df$Region == "South Asia"
+south_asia <- clean_df[subgroup1, ]
+
+subgroup2 <- clean_df$Region == "Middle East & North Africa"
+m_east_n_africa <- clean_df[subgroup2, ]
+
+subgroup3 <- clean_df$Region == "Latin America & Caribbean"
+l_america_carib <- clean_df[subgroup3, ]
+
+subgroup4 <- clean_df$Region == "East Asia & Pacific"
+e_asia_pacific <- clean_df[subgroup4, ]
+
+subgroup5 <- clean_df$Region == "Europe & Central Asia"
+euro_c_asia <- clean_df[subgroup5, ]
+
+subgroup6 <- clean_df$Region == "Sub-Saharan Africa"
+sub_africa <- clean_df[subgroup6, ]
+
+subgroup7 <- clean_df$Region == "High income: OECD"
+high_income <- clean_df[subgroup7, ]
+
+head(high_income)
+
+```
+
+
+
+```{r}
+economic_indicators_data_2018 = read.csv('data/raw-data/economic_indicators_2018.csv')
+head(economic_indicators_data_2018)
+```
+
+
+
+
+```{r}
+clean_df$Economy[clean_df$Economy == "Côte d'Ivoire"] <- "Cote d'Ivoire"
+clean_df$Economy[clean_df$Economy == "Türkiye"] <- "Turkiye"
+clean_df$Economy[clean_df$Economy == "são tomé and príncipe"] <- "Sao Tome and Principe"
+clean_df$Economy <- tolower(trimws(clean_df$Economy ))
+economic_indicators_data_2018$Country.Name <- tolower(trimws(economic_indicators_data_2018$Country.Name))
+clean_df$match <- clean_df$Economy %in% economic_indicators_data_2018$Country.Name
+num_countries_in_common <- sum(clean_df$match)
+num_countries_not_in_common <- sum(!clean_df$match)
+
+countries_not_in_common <- clean_df$Economy[!clean_df$match]
+cat("Number of countries in common:", num_countries_in_common, "\n")
+cat("Number of countries not in common:", num_countries_not_in_common, "\n")
+cat("Countries not in common:\n", paste(countries_not_in_common, collapse = ", "), "\n")
+
+```
+```{r}
+print(nrow(economic_indicators_data_2018))
+
+```
+```{r}
+print(nrow(clean_df))
+```
+
+
+```{r}
+# merging both datasets
+gender_inequality_and_economic_indicators_dataset <- merge(clean_df, economic_indicators_data_2018, by.x = "Economy", by.y = "Country.Name", all.x = TRUE)
+gender_inequality_and_economic_indicators_dataset <- subset(gender_inequality_and_economic_indicators_dataset, select = -year)
+
+head(gender_inequality_and_economic_indicators_dataset)
+```
+
+
+```{r}
+print(nrow(gender_inequality_and_economic_indicators_dataset))
+```
+
+```{r}
+write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/raw_gender_inequality_and_economic_indicators_dataset.csv", row.names = FALSE)
+
+```
+
+```{r}
+gender_inequality_and_economic_indicators_dataset_clean <- na.omit(gender_inequality_and_economic_indicators_dataset)
+print(nrow(gender_inequality_and_economic_indicators_dataset_clean))
+```
+
+```{r}
+gender_inequality_and_economic_indicators_dataset_clean
+```
+
+
