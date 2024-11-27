@@ -215,14 +215,18 @@ head(gender_inequality_and_economic_indicators_dataset)
 
 #apply log to all of the numerical columns 
 
-numerical_colums <- c("Foreign_direct_investment", "agriculture_forestry_value_added", 
+numerical_columns <- c("Foreign_direct_investment", "agriculture_forestry_value_added", 
                     "GNI.per.capita", "net_barter_terms_of_trade_index", "gdp_per_person_employed")
 
 
-for (col in numerical_colums) {
-  gender_inequality_and_economic_indicators_dataset[[paste0('log_', col)]] <- 
-    log(pmax(gender_inequality_and_economic_indicators_dataset[[col]] + 1, 0)) 
+
+for (col in numerical_columns) {
+  gender_inequality_and_economic_indicators_dataset[[col]] <- 
+    pmax(gender_inequality_and_economic_indicators_dataset[[col]], 0)
+  gender_inequality_and_economic_indicators_dataset[[paste0("log_", col)]] <- 
+    log(gender_inequality_and_economic_indicators_dataset[[col]] + 1)
 }
+
 
 head(gender_inequality_and_economic_indicators_dataset)
 
@@ -231,6 +235,10 @@ head(gender_inequality_and_economic_indicators_dataset)
 print(nrow(gender_inequality_and_economic_indicators_dataset))
 ```
 
+```{r}
+write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/raw_gender_inequality_and_economic_indicators_dataset_clean.csv", row.names = FALSE)
+
+```
 
 
 
