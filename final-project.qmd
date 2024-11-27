@@ -116,13 +116,125 @@ write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-dat
 
 ```
 
+
 ```{r}
-gender_inequality_and_economic_indicators_dataset_clean <- na.omit(gender_inequality_and_economic_indicators_dataset)
-print(nrow(gender_inequality_and_economic_indicators_dataset_clean))
+
+# Decision on filling with mean median or mode 
+#https://vitalflux.com/pandas-impute-missing-values-mean-median-mode/
+# foreign direct investment is skewed and not normally distributed so replace with median 
+
+# Checking normality for foreign direct investment 
+shapiro.test(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment)
 ```
 
 ```{r}
-gender_inequality_and_economic_indicators_dataset_clean
+# replacing with median
+
+Foreign_direct_investment_median <- median(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment, na.rm = TRUE)
+gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment[is.na(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment)] <- Foreign_direct_investment_median 
+
 ```
+
+
+```{r}
+shapiro.test(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
+
+```
+```{r}
+# replacing with median
+
+agriculture_forestry_value_added_median <- median(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added, na.rm = TRUE)
+
+gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added[is.na(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)] <- agriculture_forestry_value_added_median
+
+```
+
+
+```{r}
+#GNI.per.capita is not normal so replace with median 
+shapiro.test(gender_inequality_and_economic_indicators_dataset$GNI.per.capita)
+
+```
+```{r}
+# replacing with median
+
+GNI.per.capita_median <- median(gender_inequality_and_economic_indicators_dataset$GNI.per.capita, na.rm = TRUE)
+
+gender_inequality_and_economic_indicators_dataset$GNI.per.capita[is.na(gender_inequality_and_economic_indicators_dataset$GNI.per.capita)] <- GNI.per.capita_median
+
+```
+
+
+```{r}
+# net_barter_tems_of_trade is not normal so we replace with median 
+shapiro.test(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index)
+
+```
+```{r}
+# replacing with median
+
+net_barter_terms_of_trade_index_median <- median(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index, na.rm = TRUE)
+
+gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index[is.na(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index)] <- net_barter_terms_of_trade_index_median
+
+
+```
+
+```{r}
+# gdp_per_person_employed is not normal replace with median
+shapiro.test(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed)
+
+```
+```{r}
+# replacing with median
+gdp_per_person_employed_median <- median(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed, na.rm = TRUE)
+
+gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed[is.na(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed)] <- gdp_per_person_employed_median
+
+```
+
+
+
+```{r}
+gender_inequality_and_economic_indicators_dataset
+```
+
+```{r}
+# rounding to two decimal points 
+gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment <- round(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment, 2)
+
+gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added <- round(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added, 2)
+
+gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index <- round(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index, 2)
+
+gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed <- round(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed, 2)
+head(gender_inequality_and_economic_indicators_dataset)
+
+```
+```{r}
+
+#apply log to all of the numerical columns 
+
+numerical_colums <- c("Foreign_direct_investment", "agriculture_forestry_value_added", 
+                    "GNI.per.capita", "net_barter_terms_of_trade_index", "gdp_per_person_employed")
+
+
+for (col in numerical_colums) {
+  gender_inequality_and_economic_indicators_dataset[[paste0('log_', col)]] <- 
+    log(pmax(gender_inequality_and_economic_indicators_dataset[[col]] + 1, 0)) 
+}
+
+head(gender_inequality_and_economic_indicators_dataset)
+
+```
+```{r}
+print(nrow(gender_inequality_and_economic_indicators_dataset))
+```
+
+
+
+
+
+
 
 
