@@ -70,16 +70,18 @@ economic_indicators_data_2018 = read.csv('data/raw-data/economic_indicators_2018
 head(economic_indicators_data_2018)
 ```
 
-
-
-
 ```{r}
 clean_df$Economy[clean_df$Economy == "Côte d'Ivoire"] <- "Cote d'Ivoire"
 clean_df$Economy[clean_df$Economy == "Türkiye"] <- "Turkiye"
-clean_df$Economy[clean_df$Economy == "são tomé and príncipe"] <- "Sao Tome and Principe"
+clean_df$Economy[clean_df$Economy == "São Tomé and Príncipe"] <- "Sao Tome and Principe"
+
+
+
 clean_df$Economy <- tolower(trimws(clean_df$Economy ))
 economic_indicators_data_2018$Country.Name <- tolower(trimws(economic_indicators_data_2018$Country.Name))
 clean_df$match <- clean_df$Economy %in% economic_indicators_data_2018$Country.Name
+
+
 num_countries_in_common <- sum(clean_df$match)
 num_countries_not_in_common <- sum(!clean_df$match)
 
@@ -131,9 +133,12 @@ shapiro.test(gender_inequality_and_economic_indicators_dataset$Foreign_direct_in
 # replacing with median
 
 Foreign_direct_investment_median <- median(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment, na.rm = TRUE)
+
 gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment[is.na(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment)] <- Foreign_direct_investment_median 
 
 ```
+
+
 
 
 ```{r}
@@ -156,9 +161,6 @@ gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_add
 head(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
 ```
 
-
-```{r}
-```
 
 
 ```{r}
@@ -224,33 +226,10 @@ head(gender_inequality_and_economic_indicators_dataset)
 
 ```
 ```{r}
-
-#apply log to all of the numerical columns 
-
-numerical_columns <- c("Foreign_direct_investment", "agriculture_forestry_value_added", 
-                    "GNI.per.capita", "net_barter_terms_of_trade_index", "gdp_per_person_employed")
-
-
-
-for (col in numerical_columns) {
-  gender_inequality_and_economic_indicators_dataset[[col]] <- 
-    pmax(gender_inequality_and_economic_indicators_dataset[[col]], 0)
-  gender_inequality_and_economic_indicators_dataset[[paste0("log_", col)]] <- 
-    log(gender_inequality_and_economic_indicators_dataset[[col]] + 1)
-}
-
-
-head(gender_inequality_and_economic_indicators_dataset)
-
-```
-```{r}
-print(nrow(gender_inequality_and_economic_indicators_dataset))
+write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/raw_gender_inequality_and_economic_indicators_dataset_clean_final.csv", row.names = FALSE)
 ```
 
-```{r}
-write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/raw_gender_inequality_and_economic_indicators_dataset_clean.csv", row.names = FALSE)
 
-```
 
 
 
