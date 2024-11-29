@@ -114,7 +114,7 @@ print(nrow(gender_inequality_and_economic_indicators_dataset))
 ```
 
 ```{r}
-write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/raw_gender_inequality_and_economic_indicators_dataset.csv", row.names = FALSE)
+write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/gender_inequality_and_economic_indicators_dataset_merged.csv", row.names = FALSE)
 
 ```
 
@@ -210,10 +210,6 @@ gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed[is.na(
 
 
 ```{r}
-gender_inequality_and_economic_indicators_dataset
-```
-
-```{r}
 # rounding to two decimal points 
 gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment <- round(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment, 2)
 
@@ -226,7 +222,7 @@ head(gender_inequality_and_economic_indicators_dataset)
 
 ```
 ```{r}
-write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/raw_gender_inequality_and_economic_indicators_dataset_clean_final.csv", row.names = FALSE)
+write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv", row.names = FALSE)
 ```
 
 
