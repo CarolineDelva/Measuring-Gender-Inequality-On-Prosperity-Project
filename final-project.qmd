@@ -144,9 +144,20 @@ shapiro.test(gender_inequality_and_economic_indicators_dataset$agriculture_fores
 # replacing with median
 
 agriculture_forestry_value_added_median <- median(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added, na.rm = TRUE)
+print(agriculture_forestry_value_added_median)
 
+head(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
+
+```
+
+```{r}
 gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added[is.na(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)] <- agriculture_forestry_value_added_median
 
+head(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
+```
+
+
+```{r}
 ```
 
 
@@ -188,6 +199,7 @@ shapiro.test(gender_inequality_and_economic_indicators_dataset$gdp_per_person_em
 ```{r}
 # replacing with median
 gdp_per_person_employed_median <- median(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed, na.rm = TRUE)
+
 
 gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed[is.na(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed)] <- gdp_per_person_employed_median
 
