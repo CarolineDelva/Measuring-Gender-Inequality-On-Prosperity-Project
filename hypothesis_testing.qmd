@@ -1,0 +1,61 @@
+```{r}
+library(dplyr)
+library(ggplot2)
+library(naniar)
+library(VIM)
+```
+
+```{r}
+clean_df = read.csv('data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv')
+print(head(clean_df))
+```
+
+```{r}
+colSums(is.na(clean_df))
+```
+
+```{r}
+vis_miss(clean_df)
+```
+
+```{r}
+vis_miss(clean_df %>% select(Foreign_direct_investment, agriculture_forestry_value_added, GNI.per.capita, net_barter_terms_of_trade_index, gdp_per_person_employed))
+
+```
+
+```{r}
+
+aggr(clean_df, col = c("skyblue", "red"), numbers = TRUE, sortVars = TRUE, gap = 3, cex.axis = 0.7)
+
+```
+
+```{r}
+##fill missing values with median
+#select columns
+columns_to_impute <- c("Foreign_direct_investment", 
+                       "agriculture_forestry_value_added", 
+                       "GNI.per.capita", 
+                       "net_barter_terms_of_trade_index", 
+                       "gdp_per_person_employed")
+
+#apply median calculation
+for (col in columns_to_impute) {
+    clean_df[[col]][is.na(clean_df[[col]])] <- median(clean_df[[col]], na.rm = TRUE)
+}
+
+#verify missing values were filled
+filled_summary <- colSums(is.na(clean_df[columns_to_impute]))
+filled_summary
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+
+
