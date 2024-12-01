@@ -1,0 +1,156 @@
+---
+title: "ENTREPRENEURSHIP"
+embed-resources: true
+---
+
+```{r}
+data <- read.csv("gender_inequality_and_economic_indicators_2018.csv")
+
+```
+
+```{r}
+data <- data[c(
+  "Region",
+  "Economy",
+    "ENTREPRENEURSHIP",
+   "Does.the.law.prohibit.discrimination.in.access.to.credit.based.on.gender.",
+   "Can.a.woman.sign.a.contract.in.the.same.way.as.a.man.",
+   "Can.a.woman.register.a.business.in.the.same.way.as.a.man.",
+   "Can.a.woman.open.a.bank.account.in.the.same.way.as.a.man."
+)]
+
+# Display the new data frame
+head(data)
+```
+
+### EDA
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(plotly)
+# Count frequencies
+region_counts <- table(data$Region)
+
+ggplot(data, aes(x = Region)) +
+  geom_bar(fill = "steelblue") +
+  coord_flip() + 
+  labs(title = "Distribution of Regions", x = "Region", y = "Count") +
+  theme_minimal()
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(plotly)
+
+stacked_plt <- ggplot(data, aes(x = Region, fill = Does.the.law.prohibit.discrimination.in.access.to.credit.based.on.gender.)) +
+    geom_bar(position = "stack") +
+    labs(
+        title = "Does the Law Prohibit Discrimination in Access to Credit Based on Gender by Region",
+        x = "Region",
+        y = "Count",
+        fill = "Response"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplotly(stacked_plt)
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+
+contract_plt <- ggplot(data, aes(x = Region, fill = Can.a.woman.sign.a.contract.in.the.same.way.as.a.man.)) +
+    geom_bar(position = "stack") +
+    labs(
+        title = "Can a Woman Sign a Contract in the Same Way as a Man by Region",
+        x = "Region",
+        y = "Count",
+        fill = "Response"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+ggplotly(contract_plt)
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+business_plt <- ggplot(data, aes(x = Region, fill = Can.a.woman.register.a.business.in.the.same.way.as.a.man.)) +
+    geom_bar(position = "stack") + 
+    labs(
+        title = "Can a Woman Register a Business in the Same Way as a Man by Region",
+        x = "Region",
+        y = "Count",
+        fill = "Response"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+ggplotly(business_plt)
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+bank_account_plt <- ggplot(data, aes(x = Region, fill = Can.a.woman.open.a.bank.account.in.the.same.way.as.a.man.)) +
+    geom_bar(position = "stack") + 
+    labs(
+        title = "Can a Woman Open a Bank Account in the Same Way as a Man by Region",
+        x = "Region",
+        y = "Count",
+        fill = "Response"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+
+ggplotly(bank_account_plt)
+
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+
+library(dplyr)
+
+
+contingency_table <- table(data$Region, data$Does.the.law.prohibit.discrimination.in.access.to.credit.based.on.gender.)
+
+
+print(contingency_table)
+
+
+chi_test <- chisq.test(contingency_table)
+
+
+cat("P-value:", chi_test$p.value, "\n")
+
+
+print(chi_test)
+
+```
+
+```{r}
+res1 <- t.test(ENTREPRENEURSHIP ~ Does.the.law.prohibit.discrimination.in.access.to.credit.based.on.gender., data = data)
+
+print(res1)
+```
+
+```{r}
+res2 <- t.test(ENTREPRENEURSHIP ~ Can.a.woman.sign.a.contract.in.the.same.way.as.a.man., data = data)
+print(res2)
+```
+
+```{r, warning = FALSE}
+
+business_table <- table(data$Region, data$Can.a.woman.register.a.business.in.the.same.way.as.a.man.)
+
+
+business_chi_test <- chisq.test(business_table)
+print(business_chi_test)
+
+```
+
+
+
+
