@@ -13,9 +13,19 @@ head(raw_data)
 ```
 
 ```{r}
-#create data frame for 2023 data
-vector_2023 <- raw_data$Report.Year == 2023
-clean_df <- raw_data[vector_2023, ]
+#create data frame for 2018 data
+vector_2018 <- raw_data$Report.Year == 2018
+clean_df <- raw_data[vector_2018, ]
+
+head(clean_df)
+```
+
+
+
+```{r}
+#create data frame for 2018 data
+vector_2018 <- raw_data$Report.Year == 2018
+clean_df <- raw_data[vector_2018, ]
 
 head(clean_df)
 ```
@@ -30,25 +40,194 @@ unique(clean_df$Region)
 #sort into separate data frames by region
 subgroup1 <- clean_df$Region == "South Asia"
 south_asia <- clean_df[subgroup1, ]
+
 subgroup2 <- clean_df$Region == "Middle East & North Africa"
 m_east_n_africa <- clean_df[subgroup2, ]
+
 subgroup3 <- clean_df$Region == "Latin America & Caribbean"
 l_america_carib <- clean_df[subgroup3, ]
+
 subgroup4 <- clean_df$Region == "East Asia & Pacific"
 e_asia_pacific <- clean_df[subgroup4, ]
+
 subgroup5 <- clean_df$Region == "Europe & Central Asia"
 euro_c_asia <- clean_df[subgroup5, ]
+
 subgroup6 <- clean_df$Region == "Sub-Saharan Africa"
 sub_africa <- clean_df[subgroup6, ]
+
 subgroup7 <- clean_df$Region == "High income: OECD"
 high_income <- clean_df[subgroup7, ]
 
 head(high_income)
 
 ```
+
+
+
 ```{r}
+economic_indicators_data_2018 = read.csv('data/raw-data/economic_indicators_2018.csv')
+head(economic_indicators_data_2018)
+```
+
+```{r}
+clean_df$Economy[clean_df$Economy == "Côte d'Ivoire"] <- "Cote d'Ivoire"
+clean_df$Economy[clean_df$Economy == "Türkiye"] <- "Turkiye"
+clean_df$Economy[clean_df$Economy == "São Tomé and Príncipe"] <- "Sao Tome and Principe"
+
+
+
+clean_df$Economy <- tolower(trimws(clean_df$Economy ))
+economic_indicators_data_2018$Country.Name <- tolower(trimws(economic_indicators_data_2018$Country.Name))
+clean_df$match <- clean_df$Economy %in% economic_indicators_data_2018$Country.Name
+
+
+num_countries_in_common <- sum(clean_df$match)
+num_countries_not_in_common <- sum(!clean_df$match)
+
+countries_not_in_common <- clean_df$Economy[!clean_df$match]
+cat("Number of countries in common:", num_countries_in_common, "\n")
+cat("Number of countries not in common:", num_countries_not_in_common, "\n")
+cat("Countries not in common:\n", paste(countries_not_in_common, collapse = ", "), "\n")
 
 ```
+```{r}
+print(nrow(economic_indicators_data_2018))
+
+```
+```{r}
+print(nrow(clean_df))
+```
+
+
+```{r}
+# merging both datasets
+gender_inequality_and_economic_indicators_dataset <- merge(clean_df, economic_indicators_data_2018, by.x = "Economy", by.y = "Country.Name", all.x = TRUE)
+gender_inequality_and_economic_indicators_dataset <- subset(gender_inequality_and_economic_indicators_dataset, select = -year)
+
+head(gender_inequality_and_economic_indicators_dataset)
+```
+
+
+```{r}
+print(nrow(gender_inequality_and_economic_indicators_dataset))
+```
+
+```{r}
+write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/gender_inequality_and_economic_indicators_dataset_merged.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+
+# Decision on filling with mean median or mode 
+#https://vitalflux.com/pandas-impute-missing-values-mean-median-mode/
+# foreign direct investment is skewed and not normally distributed so replace with median 
+
+# Checking normality for foreign direct investment 
+shapiro.test(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment)
+```
+
+```{r}
+# replacing with median
+
+Foreign_direct_investment_median <- median(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment, na.rm = TRUE)
+
+gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment[is.na(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment)] <- Foreign_direct_investment_median 
+
+```
+
+
+```{r}
+shapiro.test(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
+
+```
+```{r}
+# replacing with median
+
+agriculture_forestry_value_added_median <- median(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added, na.rm = TRUE)
+print(agriculture_forestry_value_added_median)
+
+head(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
+
+```
+
+```{r}
+gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added[is.na(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)] <- agriculture_forestry_value_added_median
+
+head(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
+```
+
+
+
+```{r}
+#GNI.per.capita is not normal so replace with median 
+shapiro.test(gender_inequality_and_economic_indicators_dataset$GNI.per.capita)
+
+```
+```{r}
+# replacing with median
+
+GNI.per.capita_median <- median(gender_inequality_and_economic_indicators_dataset$GNI.per.capita, na.rm = TRUE)
+
+gender_inequality_and_economic_indicators_dataset$GNI.per.capita[is.na(gender_inequality_and_economic_indicators_dataset$GNI.per.capita)] <- GNI.per.capita_median
+
+```
+
+
+```{r}
+# net_barter_tems_of_trade is not normal so we replace with median 
+shapiro.test(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index)
+
+```
+```{r}
+# replacing with median
+
+net_barter_terms_of_trade_index_median <- median(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index, na.rm = TRUE)
+
+gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index[is.na(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index)] <- net_barter_terms_of_trade_index_median
+
+
+```
+
+```{r}
+# gdp_per_person_employed is not normal replace with median
+shapiro.test(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed)
+
+```
+```{r}
+# replacing with median
+gdp_per_person_employed_median <- median(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed, na.rm = TRUE)
+
+
+gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed[is.na(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed)] <- gdp_per_person_employed_median
+
+```
+
+
+
+```{r}
+# rounding to two decimal points 
+gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment <- round(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment, 2)
+
+gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added <- round(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added, 2)
+
+gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index <- round(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index, 2)
+
+gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed <- round(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed, 2)
+head(gender_inequality_and_economic_indicators_dataset)
+
+```
+```{r}
+write.csv(gender_inequality_and_economic_indicators_dataset, "data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv", row.names = FALSE)
+```
+
+
+
+
+
+
 
 
 

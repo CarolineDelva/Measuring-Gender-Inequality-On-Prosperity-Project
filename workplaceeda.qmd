@@ -1,0 +1,272 @@
+---
+title: "Workplace EDA"
+format: 
+    html:
+        embed-resources: true
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+library(tidyr)
+```
+
+
+```{r}
+gender_inequality_and_economic_indicators_dataset <- read.csv("data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv")
+head(gender_inequality_and_economic_indicators_dataset)
+```
+
+```{r}
+economic_indicators_and_gender_inequality_data_subset <- gender_inequality_and_economic_indicators_dataset%>%
+  select(Economy,                                                                               
+Economy.Code,                                                                         
+ISO.Code,                                                                              
+Region,                                                                               
+Income.Group,                                                                         
+Report.Year,                                                                          
+WBL.INDEX,
+WORKPLACE,                                                                           
+Can.a.woman.get.a.job.in.the.same.way.as.a.man.,                                      
+Does.the.law.prohibit.discrimination.in.employment.based.on.gender.,                 
+Is.there.legislation.on.sexual.harassment.in.employment.,                             
+Are.there.criminal.penalties.or.civil.remedies.for.sexual.harassment.in.employment., 
+Foreign_direct_investment,                                                            
+agriculture_forestry_value_added,                                                      
+GNI.per.capita,                                                                       
+net_barter_terms_of_trade_index,                                                      
+gdp_per_person_employed,
+)
+
+str(economic_indicators_and_gender_inequality_data_subset)
+
+```
+
+```{r}
+summary(economic_indicators_and_gender_inequality_data_subset)
+```
+
+
+INEQUALITY INDICATORS 
+
+WBL INDEX Distribution 
+
+```{r}
+
+ggplot(economic_indicators_and_gender_inequality_data_subset, aes(x = WBL.INDEX)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of WBL.INDEX", x = "WBL.INDEX", y = "Frequency")
+
+
+```
+In the year of 2018, the distribution of WBL.Index presents a left skew with higher frequencies for higher WBL.Index scores than lower WBL.Index score. 
+
+WORKPLACE INDEX 
+
+
+```{r}
+
+ggplot(economic_indicators_and_gender_inequality_data_subset, aes(x = WORKPLACE)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of WORKPLACE", x = "WORKPLACE", y = "Frequency")
+
+```
+
+In the year of 2018, a great majority of the workplace scores were at 100 with the rest spread across the various scores.  
+
+```{r}
+
+par(mar = c(5, 5, 4, 2))
+ggplot(economic_indicators_and_gender_inequality_data_subset, aes(x = Region, y = WBL.INDEX)) +
+  geom_boxplot(fill = "lightblue") +
+  theme_minimal() +
+  labs(title = "WBL.INDEX by Region", x = "Region", y = "WBL.INDEX") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Based on regions, Middle East and North Africa seem to have lowest scores for WBL Index and High Income OECD seem to have the highest scores for WBL Index. 
+
+
+```{r}
+
+par(mar = c(5, 5, 4, 2))
+ggplot(economic_indicators_and_gender_inequality_data_subset, aes(x = Region, y = WORKPLACE)) +
+  geom_boxplot(fill = "lightblue") +
+  theme_minimal() +
+  labs(title = "WORKPLACE by Region", x = "Region", y = "WORKPLACE") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Based on regions, Middle East and North Africa seem to have lowest scores for Workplace and High Income OECD seem to have the highest scores for Workplace as well. 
+
+
+
+```{r}
+economic_indicators_and_gender_inequality_data_subset %>%
+  group_by(Region) %>%
+  summarize(yes_answer_count = sum(Can.a.woman.get.a.job.in.the.same.way.as.a.man. == "Yes", na.rm = TRUE),
+            no_answer_count = sum(Can.a.woman.get.a.job.in.the.same.way.as.a.man. == "No", na.rm = TRUE)) %>%
+  mutate(total = yes_answer_count + no_answer_count,
+         yes_answer_percentage = yes_answer_count / total * 100)
+
+mosaicplot(~Region + Does.the.law.prohibit.discrimination.in.employment.based.on.gender., data = economic_indicators_and_gender_inequality_data_subset,
+           color = TRUE, main = "Gender Inequality based on Region", ylab='Can.a.woman.get.a.job.in.the.same.way.as.a.man',  las = 2)
+```
+For the question 'Can a woman get a job in the same way as a man' variable, there is a greater percentage of nos in South Asia and the least percentage of no's for Europe and Central Asia  and High Income OECD.
+
+
+```{r}
+
+economic_indicators_and_gender_inequality_data_subset %>%
+  group_by(Region) %>%
+  summarize(yes_answer_count = sum(Does.the.law.prohibit.discrimination.in.employment.based.on.gender. == "Yes", na.rm = TRUE),
+            no_answer_count = sum(Does.the.law.prohibit.discrimination.in.employment.based.on.gender. == "No", na.rm = TRUE)) %>%
+  mutate(total = yes_answer_count + no_answer_count,
+         yes_percentage = yes_answer_count / total * 100)
+
+mosaicplot(~Region + Does.the.law.prohibit.discrimination.in.employment.based.on.gender., data = economic_indicators_and_gender_inequality_data_subset,
+           color = TRUE, main = "Gender Inequality based on Region", ylab='Does.the.law.prohibit.discrimination.in.employment.based.on.gender.',  las = 2)
+```
+For the question 'Does the law prohibits discrimination in employment based on gender' variable, there is a greater percentage of no's in South Asia and the least percentage of no's for Europe and Central Asia  and High Income OECD.
+
+```{r}
+
+economic_indicators_and_gender_inequality_data_subset %>%
+  group_by(Region) %>%
+  summarize(yes_answer_count = sum(Is.there.legislation.on.sexual.harassment.in.employment. == "Yes", na.rm = TRUE),
+            no_answer_count = sum(Is.there.legislation.on.sexual.harassment.in.employment. == "No", na.rm = TRUE)) %>%
+  mutate(total = yes_answer_count + no_answer_count,
+         yes_percentage = yes_answer_count / total * 100)
+
+mosaicplot(~Region + Is.there.legislation.on.sexual.harassment.in.employment., data = economic_indicators_and_gender_inequality_data_subset,
+           color = TRUE, main = "Gender Inequality based on Region", ylab='Is.there.legislation.on.sexual.harassment.in.employment.',  las = 2)
+```
+
+For the question 'Is there legislation on sexual harassment in employment' variable, there is a greater percentage of no's in Middle East and North Africa and the least percentage of no's for South Asia and High Income OECD
+
+```{r}
+
+economic_indicators_and_gender_inequality_data_subset %>%
+  group_by(Region) %>%
+  summarize(yes_answer_count = sum(Are.there.criminal.penalties.or.civil.remedies.for.sexual.harassment.in.employment. == "Yes", na.rm = TRUE),
+            no_answer_count = sum(Are.there.criminal.penalties.or.civil.remedies.for.sexual.harassment.in.employment. == "No", na.rm = TRUE)) %>%
+  mutate(total = yes_answer_count + no_answer_count,
+         yes_percentage = yes_answer_count / total * 100)
+
+mosaicplot(~Region + Are.there.criminal.penalties.or.civil.remedies.for.sexual.harassment.in.employment., data = economic_indicators_and_gender_inequality_data_subset,
+           color = TRUE, main = "Gender Inequality based on Region", ylab='Are.there.criminal.penalties.or.civil.remedies.for.sexual.harassment.in.employment.',  las = 2)
+```
+For the question 'Are.there.criminal.penalties.or.civil.remedies.for.sexual.harassment.in.employment.' variable, there is a greater percentage of nos in Middle East and North Africa and Asia and Pacific and the least percentage of no's for South Asia and High Income OECD
+
+
+
+```{r}
+
+econimic_indicator_gender_inequality_pivot_long<- economic_indicators_and_gender_inequality_data_subset %>%
+  pivot_longer(
+    cols = c(Foreign_direct_investment, agriculture_forestry_value_added, 
+             GNI.per.capita, net_barter_terms_of_trade_index, 
+             gdp_per_person_employed),
+    names_to = "Economic_Indicator",
+    values_to = "values"
+  )
+
+econimic_indicator_gender_inequality_pivot_long
+
+
+ggplot(econimic_indicator_gender_inequality_pivot_long, aes(x = WBL.INDEX, y = values)) +
+  geom_point(color = "blue", alpha = 0.7) +  # 
+  geom_smooth(method = "lm", se = FALSE, color = "red", linetype = "dashed") + 
+  facet_wrap(~ Economic_Indicator, scales = "free_y") +  
+  labs(
+    title = "WBL.INDEX vs Economic Indicators",
+    x = "WBL.INDEX",
+    y = "Economic Indicator"
+  ) +
+  theme_minimal() + 
+  theme(
+    strip.text = element_text(face = "bold", size = 12),  # Facet labels styling
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16)
+  )
+
+```
+Agriculture Forestry Value Adjusted: As gender inequality is high as indicated by low WBL Index, there is low level of agriculture forestry value adjusted. As gender inequality is high as indicated by low WBL Index, there is also low level of agriculture forestry value adjusted.
+
+Foreign Direct Investment : As gender inequality is high as indicated by low WBL Index, there is low level of Foreign Direct Investment. As gender inequality is high as indicated by low WBL Index, there is also low level of Foreign Direct Investment.
+
+GDP per Person Employed: As gender inequality is high as indicated by low WBL Index, there is low level of GDP per Person Employed. As gender inequality is high as indicated by low WBL Index, there is also high level of GDP per Person Employed.
+
+GNI per Capita: As gender inequality is high as indicated by low WBL Index, there is low level of GNI per Capita. As gender inequality is high as indicated by low WBL Index, there is also high level of GNI per Capita.
+
+Barter Terms of Trade: As gender inequality is high as indicated by low WBL Index, there is high level of Barter Terms of Trade. As gender inequality is high as indicated by low WBL Index, there is also low level of Barter Terms of Trade.
+
+
+
+```{r}
+
+workplace_data_long <- economic_indicators_and_gender_inequality_data_subset %>%
+  pivot_longer(
+    cols = c(Foreign_direct_investment, agriculture_forestry_value_added, 
+             GNI.per.capita, net_barter_terms_of_trade_index, 
+             gdp_per_person_employed),
+    names_to = "Economic_Indicator",
+    values_to = "workplace_value"
+  )
+
+
+ggplot(workplace_data_long , aes(x = WORKPLACE, y = workplace_value)) +
+  geom_point(color = "blue", alpha = 0.7) +  # Scatter points
+  geom_smooth(method = "lm", se = FALSE, color = "red", linetype = "dashed") +  
+  facet_wrap(~ Economic_Indicator, scales = "free_y") +  
+  labs(
+    title = "WORKPLACE vs Economic Indicators",
+    x = "WORKPLACE",
+    y = "Indicator Value"
+  ) +
+  theme_minimal() +  # Clean theme
+  theme(
+    strip.text = element_text(face = "bold", size = 12),  
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16)
+  )
+```
+Agriculture Forestry Value Adjusted: As gender inequality is high as indicated by low Workplace, there is low level of agriculture forestry value adjusted. As gender inequality is high as indicated by low Workplace, there is also low level of agriculture forestry value adjusted.
+
+Foreign Direct Investment : As gender inequality is high as indicated by low Workplace, there is low level of Foreign Direct Investment. As gender inequality is high as indicated by low Workplace, there is also low level of Foreign Direct Investment.
+
+GDP per Person Employed: As gender inequality is high as indicated by low Workplace, there is low level of GDP per Person Employed. As gender inequality is high as indicated by low Workplace, there is also high level of GDP per Person Employed.
+
+GNI per Capita: As gender inequality is high as indicated by low Workplace, there is low level of GNI per Capita. As gender inequality is high as indicated by low Workplace, there is also high level of GNI per Capita.
+
+Barter Terms of Trade: As gender inequality is high as indicated by low Workplace, there is high level of Barter Terms of Trade. As gender inequality is high as indicated by low Workplace, there is also low level of Barter Terms of Trade.
+
+
+
+```{r}
+ggplot(econimic_indicator_gender_inequality_pivot_long, aes(x = Region, y = values, fill = Region)) +
+  geom_boxplot() +
+  facet_wrap(~ Economic_Indicator, scales = "free_y") +
+  labs(
+    title = "Distribution of Economic Indicators by Region", 
+    x = "Region", y = "Indicator Value"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 90, hjust = 1)
+  )
+
+```
+
+
+
+
+
+
+
+
+
+
+

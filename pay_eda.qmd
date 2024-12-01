@@ -1,0 +1,139 @@
+---
+title: "Hello, Quarto"
+format: 
+    html:
+        embed-resources: true
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+
+df <- read.csv('data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv')
+```
+
+```{r}
+# Examining pay subcategories
+df_pay_counts <- df %>%
+    group_by(Region) %>%
+    summarise(
+        equal_remuneration_yes_count = sum(Does.the.law.mandate.equal.remuneration.for.work.of.equal.value. == 'Yes'),
+        equal_remuneration_no_count = sum(Does.the.law.mandate.equal.remuneration.for.work.of.equal.value. == 'No'),
+        total_remuneration_count = equal_remuneration_yes_count + equal_remuneration_no_count, 
+        work_at_night_yes_count = sum(Can.a.woman.work.at.night.in.the.same.way.as.a.man. == 'Yes'),
+        work_at_night_no_count = sum(Can.a.woman.work.at.night.in.the.same.way.as.a.man. == 'No'),
+        total_night_count = work_at_night_yes_count + work_at_night_no_count,
+        dangerous_job_yes_count = sum(Can.a.woman.work.in.a.job.deemed.dangerous.in.the.same.way.as.a.man. == 'Yes'),
+        dangerous_job_no_count = sum(Can.a.woman.work.in.a.job.deemed.dangerous.in.the.same.way.as.a.man. == 'No'),
+        total_dangerous_count = dangerous_job_yes_count + dangerous_job_no_count,
+        industrial_job_yes_count = sum(Can.a.woman.work.in.an.industrial.job.in.the.same.way.as.a.man. == 'Yes'),
+        industrial_job_no_count = sum(Can.a.woman.work.in.an.industrial.job.in.the.same.way.as.a.man. == 'No'),
+        total_industrial_count = industrial_job_yes_count + industrial_job_no_count
+    )
+
+df_pay_percent <- df_pay_counts %>%
+    group_by(Region) %>%
+    mutate(percent_no_remuneration = equal_remuneration_no_count / total_remuneration_count * 100) %>%
+    mutate(percent_no_night = work_at_night_no_count / total_night_count * 100) %>%
+    mutate(percent_no_dangerous = dangerous_job_no_count / total_dangerous_count * 100) %>%
+    mutate(percent_no_industrial = industrial_job_no_count / total_industrial_count * 100)
+head(df_pay_percent)
+
+df_pay_percent <- df_pay_counts %>%
+    group_by(Region) %>%
+    mutate(percent_no_remuneration = equal_remuneration_no_count / total_remuneration_count * 100) %>%
+    mutate(percent_no_night = work_at_night_no_count / total_night_count * 100) %>%
+    mutate(percent_no_dangerous = dangerous_job_no_count / total_dangerous_count * 100) %>%
+    mutate(percent_no_industrial = industrial_job_no_count / total_industrial_count * 100)
+View(df_pay_percent)
+
+
+```
+
+```{r}
+
+# Plot for percent_no_remuneration
+ggplot(df_pay_percent, aes(x = Region, y = percent_no_remuneration)) +
+    geom_bar(stat = "identity") +
+    labs(title = 'Percentage of "No" for if the law mandates equal remuneration for work of equal value',
+         x = "Region",
+         y = "'No' Percentage") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Plot for percent_no_night
+ggplot(df_pay_percent, aes(x = Region, y = percent_no_night)) +
+    geom_bar(stat = "identity") +
+    labs(title = 'Percentage of "No" for if a woman can work at night in the same way as a man',
+         x = "Region",
+         y = "'No' Percentage") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Plot for percent_no_dangerous
+ggplot(df_pay_percent, aes(x = Region, y = percent_no_dangerous)) +
+    geom_bar(stat = "identity") +
+    labs(title = 'Percentage of "No" for if a woman can work in a job deemed dangerous in the same way as a man',
+         x = "Region",
+         y = "'No' Percentage") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Plot for percent_no_industrial
+ggplot(df_pay_percent, aes(x = Region, y = percent_no_industrial)) +
+    geom_bar(stat = "identity") +
+    labs(title = 'Percentage of "No" for if a woman can work in an industrial job in the same way as a man',
+         x = "Region",
+         y = "'No' Percentage") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+
+# Pay vs. Economic Indicators
+pay_subset <- df%>%
+  select(Economy,                                                                               
+Economy.Code,                                                                         
+ISO.Code,                                                                              
+Region,                                                                               
+Income.Group,                                                                         
+Report.Year,                                                                          
+WBL.INDEX,
+PAY,                                                                           
+Does.the.law.mandate.equal.remuneration.for.work.of.equal.value.,                                      
+Can.a.woman.work.at.night.in.the.same.way.as.a.man.,                 
+Can.a.woman.work.in.a.job.deemed.dangerous.in.the.same.way.as.a.man.,                             
+Can.a.woman.work.in.an.industrial.job.in.the.same.way.as.a.man., 
+Foreign_direct_investment,                                                            
+agriculture_forestry_value_added,                                                      
+GNI.per.capita,                                                                       
+net_barter_terms_of_trade_index,                                                      
+gdp_per_person_employed,
+)
+
+
+pay_data_long <- pay_subset %>%
+  pivot_longer(
+    cols = c(Foreign_direct_investment, agriculture_forestry_value_added, 
+             GNI.per.capita, net_barter_terms_of_trade_index, 
+             gdp_per_person_employed),
+    names_to = "Economic_Indicator",
+    values_to = "pay_value"
+  )
+
+head(pay_data_long) 
+
+ggplot(pay_data_long , aes(x = PAY, y = pay_value)) +
+  geom_point(color = "blue", alpha = 0.7) +  # Scatter points
+  geom_smooth(method = "lm", se = FALSE, color = "red", linetype = "dashed") +  
+  facet_wrap(~ Economic_Indicator, scales = "free_y") +  
+  labs(
+    title = "PAY vs Economic Indicators",
+    x = "PAY",
+    y = "Indicator Value"
+  ) +
+  theme_minimal() +  # Clean theme
+  theme(
+    strip.text = element_text(face = "bold", size = 12),  
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16)
+  )
+```
