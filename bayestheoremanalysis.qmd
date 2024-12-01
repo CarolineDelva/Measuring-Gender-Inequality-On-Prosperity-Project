@@ -1,0 +1,298 @@
+
+---
+title: "Bayes Rules Analysis"
+format: 
+    html:
+        embed-resources: true
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+economic_indicators_and_gender_inequality_data = read.csv('data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv')
+head(economic_indicators_and_gender_inequality_data)
+
+```
+
+
+```{r}
+economic_indicators_and_gender_inequality_data_subset <- economic_indicators_and_gender_inequality_data %>%
+  select(Economy,                                                                               
+Economy.Code,                                                                         
+ISO.Code,                                                                              
+Region,                                                                               
+Income.Group,                                                                         
+Report.Year,                                                                          
+WBL.INDEX,
+WORKPLACE,                                                                           
+Can.a.woman.get.a.job.in.the.same.way.as.a.man.,                                      
+Does.the.law.prohibit.discrimination.in.employment.based.on.gender.,                 
+Is.there.legislation.on.sexual.harassment.in.employment.,                             
+Are.there.criminal.penalties.or.civil.remedies.for.sexual.harassment.in.employment., 
+Foreign_direct_investment,                                                            
+agriculture_forestry_value_added,                                                      
+GNI.per.capita,                                                                       
+net_barter_terms_of_trade_index,                                                      
+gdp_per_person_employed,
+)
+
+str(economic_indicators_and_gender_inequality_data_subset)
+
+```
+
+-----------
+
+Calculating posterior probability of high inequality given low economic indicators.
+
+```{r}
+economic_indicators_and_gender_inequality_data_subset <- economic_indicators_and_gender_inequality_data_subset %>%
+  mutate(
+    inequality_categories = ifelse(WBL.INDEX < 50,"Low","High"), 
+    workplace_categories = ifelse(WORKPLACE < 50, "Low", "High"), 
+    gdp_per_person_employed_category = ifelse(gdp_per_person_employed < 11000,"Low", 'High')
+  )
+
+priors_high_inequality <- mean(economic_indicators_and_gender_inequality_data_subset$inequality_categories == "High")
+priors_low_inequality <- mean(economic_indicators_and_gender_inequality_data_subset$inequality_categories == "Low")
+
+print(paste("Prior Probability P(High Inequality):", priors_high_inequality))
+print(paste("Prior Probability P(Low Inequality):", priors_low_inequality))
+
+# Likelihood P(Low Economic Indicators | High Inequality)
+high_inequality_data <- economic_indicators_and_gender_inequality_data_subset %>%
+  filter(inequality_categories == "High")
+
+
+low_gdp_threshold <- 100000
+
+likelihood_low_gdp_given_high_inequality <- pnorm(low_gdp_threshold, mean = mean(high_inequality_data$gdp_per_person_employed), sd = sd(high_inequality_data$gdp_per_person_employed))
+print(paste("Likelihood P(Low Economic Indicators | High Inequality):", likelihood_low_gdp_given_high_inequality))
+
+# Evidence: P(Low Economic Indicators)
+low_inequality_data <- economic_indicators_and_gender_inequality_data_subset %>%
+  filter(inequality_categories == "Low")
+
+likelihood_low_gdp_given_low_inequality <- pnorm(low_gdp_threshold, mean =  mean(low_inequality_data$gdp_per_person_employed), sd = sd(low_inequality_data$gdp_per_person_employed))
+
+evidence <- (likelihood_low_gdp_given_high_inequality * priors_high_inequality) + 
+            (likelihood_low_gdp_given_low_inequality * priors_low_inequality)
+print(paste("Evidence P(Low Economic Indicators):", evidence))
+
+# Posterior Probability P(High Inequality | Low Economic Indicators):
+
+posterior_high_inequality <- (likelihood_low_gdp_given_high_inequality * priors_high_inequality) / evidence
+print(paste("Posterior Probability P(High Inequality | Low Economic Indicators):", posterior_high_inequality))
+
+```
+
+
+
+Calculating posterior probability of low economic indicators given high inequality.
+
+
+```{r}
+
+# Priors 
+priors_high_inequality <- mean(economic_indicators_and_gender_inequality_data_subset$inequality_categories == "High")
+priors_low_inequality <- mean(economic_indicators_and_gender_inequality_data_subset$inequality_categories == "Low")
+
+# Likelihood 
+high_inequality_data <- economic_indicators_and_gender_inequality_data_subset %>%
+  filter(inequality_categories == "High")
+
+low_gdp_threshold <- 11000
+likelihood_low_econ_given_high_inequality <- pnorm(low_gdp_threshold, mean = mean(high_inequality_data$gdp_per_person_employed, na.rm = TRUE), sd = sd(high_inequality_data$gdp_per_person_employed, na.rm = TRUE))
+
+# Calculate Evidence P(Low Economic Indicators)
+low_inequality_data <- economic_indicators_and_gender_inequality_data_subset %>%
+  filter(inequality_categories == "Low")
+
+likelihood_low_econ_given_low_inequality <- pnorm(low_gdp_threshold, mean = mean(low_inequality_data$gdp_per_person_employed, na.rm = TRUE), sd =  sd(low_inequality_data$gdp_per_person_employed, na.rm = TRUE))
+
+evidence <- (likelihood_low_econ_given_high_inequality * priors_high_inequality) + 
+            (likelihood_low_econ_given_low_inequality * priors_low_inequality)
+
+#Posterior Probability P(Low Economic Indicators | High Inequality)
+posterior_low_econ_given_high_inequality <- (likelihood_low_econ_given_high_inequality * priors_high_inequality) / evidence
+
+
+print(paste("Posterior Probability P(Low Economic Indicators | High Inequality):", posterior_low_econ_given_high_inequality))
+
+```
+
+# when there is high inequality, there is low economy based on gpd per person employed 
+
+
+```{r}
+bayes_rule <- function(data, economic_indicator, low_gdp_threshold) {
+  data <- data %>%
+    mutate(
+      inequality_categories = ifelse(WBL.INDEX < 50, "Low", "High"),
+      workplace_categories = ifelse(WORKPLACE < 50, "Low", "High")
+    )
+
+  # Prior Probabilities
+  priors_high_inequality <- mean(data$inequality_categories == "High")
+  priors_low_inequality <- mean(data$inequality_categories == "Low")
+  #print(paste("Prior Probability P(High Inequality):", priors_high_inequality))
+  #print(paste("Prior Probability P(Low Inequality):", priors_low_inequality))
+
+  #Likelihood: P(Low Economic Indicators | High Inequality)
+  high_inequality_data <- data %>%
+    filter(inequality_categories == "High")
+
+  likelihood_low_gdp_given_high_inequality <- pnorm(
+    low_gdp_threshold,
+    mean =  mean(high_inequality_data[[economic_indicator]], na.rm = TRUE),
+    sd = sd(high_inequality_data[[economic_indicator]], na.rm = TRUE)
+  )
+
+
+  #print(paste("Likelihood P(Low Economic Indicators | High Inequality):", likelihood_low_gdp_given_high_inequality))
+
+  #Evidence: P(Low Economic Indicators)
+  low_inequality_data <- data %>%
+    filter(inequality_categories == "Low")
+
+ 
+  likelihood_low_gdp_given_low_inequality <- pnorm(
+    low_gdp_threshold,
+    mean =  mean(low_inequality_data[[economic_indicator]], na.rm = TRUE),
+    sd = sd(low_inequality_data[[economic_indicator]], na.rm = TRUE)
+  )
+
+  evidence <- (likelihood_low_gdp_given_high_inequality * priors_high_inequality) +
+    (likelihood_low_gdp_given_low_inequality * priors_low_inequality)
+  #print(paste("Evidence P(Low Economic Indicators):", evidence))
+
+  # Posterior: P(Low Economic Indicators | High Inequality)
+  posterior_low_econ_given_high_inequality <- (likelihood_low_gdp_given_high_inequality * priors_high_inequality) / evidence
+  #print(paste("Posterior Probability P(Low Economic Indicators | High Inequality):", posterior_low_econ_given_high_inequality))
+
+  return(list(
+    priors_high_inequality = priors_high_inequality,
+    priors_low_inequality = priors_low_inequality,
+    likelihood_low_gdp_given_high_inequality = likelihood_low_gdp_given_high_inequality,
+    evidence = evidence,
+    posterior_low_econ_given_high_inequality = posterior_low_econ_given_high_inequality
+  ))
+}
+
+```
+
+
+```{r}
+bayes_rule(economic_indicators_and_gender_inequality_data_subset,"gdp_per_person_employed", 11000 )
+```
+
+
+# GNI per Capita 
+
+```{r}
+bayes_rule(economic_indicators_and_gender_inequality_data_subset,"GNI.per.capita", 1025 )
+
+```
+           
+Foreign_direct_investment 
+
+
+```{r}
+bayes_rule(economic_indicators_and_gender_inequality_data_subset,"net_barter_terms_of_trade_index", 90 )
+
+```
+
+#agriculture_forestry_value_added  
+
+```{r}
+bayes_rule(economic_indicators_and_gender_inequality_data_subset,"agriculture_forestry_value_added", 2.8 )
+
+```
+
+```{r}
+additive_bayes_rule <- function(data, economic_indicators, low_thresholds) {
+
+  if (length(economic_indicators) != length(low_thresholds)) {
+    stop("We need the same number of indicators and thresholds.")
+  }
+
+  data <- data %>%
+    mutate(
+      inequality_categories = ifelse(WBL.INDEX < 50, "Low", "High"),
+      workplace_categories = ifelse(WORKPLACE < 50, "Low", "High")
+    )
+
+  # Prior Probabilities
+  priors_high_inequality <- mean(data$inequality_categories == "High")
+  priors_low_inequality <- mean(data$inequality_categories == "Low")
+
+  print(paste("Prior Probability P(High Inequality):", priors_high_inequality))
+  print(paste("Prior Probability P(Low Inequality):", priors_low_inequality))
+
+  likelihood_low_given_high <- 0
+  likelihood_low_given_low <- 0
+
+  for (i in seq_along(economic_indicators)) {
+    indicator <- economic_indicators[i]
+    threshold <- low_thresholds[i]
+
+    high_inequality_data <- data %>%
+      filter(inequality_categories == "High")
+
+    low_inequality_data <- data %>%
+      filter(inequality_categories == "Low")
+  
+    likelihood_high <- pnorm(threshold, mean = mean(high_inequality_data[[indicator]], na.rm = TRUE), sd = sd(high_inequality_data[[indicator]], na.rm = TRUE))
+    likelihood_low <- pnorm(threshold, mean = mean(low_inequality_data[[indicator]], na.rm = TRUE), sd =  sd(low_inequality_data[[indicator]], na.rm = TRUE))
+
+  
+    likelihood_low_given_high <- likelihood_low_given_high + likelihood_high
+    likelihood_low_given_low <- likelihood_low_given_low + likelihood_low
+  }
+
+  likelihood_low_given_high <- likelihood_low_given_high / length(economic_indicators)
+  likelihood_low_given_low <- likelihood_low_given_low / length(economic_indicators)
+  print(paste("Total Likelihood P(Low Economic Indicators | High Inequality):", likelihood_low_given_high))
+  print(paste("Total Likelihood P(Low Economic Indicators | Low Inequality):", likelihood_low_given_low))
+
+  # Evidence: P(Low Economic Indicators)
+  evidence <- (likelihood_low_given_high * priors_high_inequality) +
+    (likelihood_low_given_low * priors_low_inequality)
+
+  print(paste("Evidence P(Low Economic Indicators):", evidence))
+
+  # Posterior: P(High Inequality | Low Economic Indicators)
+  posterior_high_inequality <- (likelihood_low_given_high * priors_high_inequality) / evidence
+
+
+  print(paste("Posterior Probability P(High Inequality | Low Economic Indicators):", posterior_high_inequality))
+
+
+  return(list(
+    priors_high_inequality = priors_high_inequality,
+    priors_low_inequality = priors_low_inequality,
+    likelihood_low_given_high = likelihood_low_given_high,
+    likelihood_low_given_low = likelihood_low_given_low,
+    evidence = evidence,
+    posterior_high_inequality = posterior_high_inequality
+  ))
+}
+
+```
+
+```{r}
+
+economic_indicators <- c("gdp_per_person_employed", "GNI.per.capita", "net_barter_terms_of_trade_index","agriculture_forestry_value_added")
+low_thresholds <- c(11000,1025,90,2.8 )
+
+additive_bayes_rules_result <- additive_bayes_rule(data = economic_indicators_and_gender_inequality_data_subset, 
+                     economic_indicators = economic_indicators, 
+                     low_thresholds = low_thresholds)
+
+print(additive_bayes_rules_result$posterior_high_inequality)
+
+```
+
