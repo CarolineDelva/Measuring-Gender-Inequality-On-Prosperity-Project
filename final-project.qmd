@@ -139,8 +139,6 @@ gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment[is.n
 ```
 
 
-
-
 ```{r}
 shapiro.test(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
 
