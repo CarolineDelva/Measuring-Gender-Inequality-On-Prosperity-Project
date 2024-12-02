@@ -52,7 +52,7 @@ colSums(is.na(clean_df))
 
 ```
 
-> One I saw that the economic indicators were missing values, I decided that filling with the median would work best, as to not skew any calculations
+> Once I saw that the economic indicators were missing values, I decided that filling with the median would work best, as to not skew any calculations
 
 ```{r}
 ##fill missing values with median
@@ -64,7 +64,7 @@ columns_to_impute <- c("Foreign_direct_investment",
                        "gdp_per_person_employed")
 #check for NAs in the economic indicators groups by Country
 na_by_economy <- clean_df %>%
-  select(Economy, all_of(economic_indicators)) %>%
+  select(Economy, all_of(columns_to_impute)) %>%
   #group_by(Economy) %>%
   summarise(across(everything(), ~ sum(is.na(.)), .names = "NA_{col}")) %>%
   arrange(desc(across(starts_with("NA_"))))
