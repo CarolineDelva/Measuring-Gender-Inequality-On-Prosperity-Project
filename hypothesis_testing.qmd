@@ -5,6 +5,7 @@ library(naniar)
 library(VIM)
 library(corrplot)
 library(tidyr)
+library(knitr)
 
 set.seed(5100)
 ```
@@ -478,6 +479,16 @@ ggplot(simulation_results, aes(x = GDP, fill = Dataset)) +
 ```{r}
 ## scatter plot with regression line to show lack of correlation between GDP and WBL Score
 ggplot(clean_df_with, aes(x = WBL.INDEX, y = gdp_per_person_employed)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(
+    title = "Relationship Between WBL Score and GDP (With High Income)",
+    x = "WBL Score",
+    y = "GDP per Person Employed"
+  ) +
+  theme_minimal()
+
+ggplot(clean_df_without, aes(x = WBL.INDEX, y = gdp_per_person_employed)) +
   geom_point(alpha = 0.6) +
   geom_smooth(method = "lm", se = FALSE, color = "blue") +
   labs(
