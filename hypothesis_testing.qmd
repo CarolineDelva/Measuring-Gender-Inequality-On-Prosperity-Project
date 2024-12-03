@@ -98,15 +98,15 @@ print(marriage_summary)
 ```{r}
 ##distribution of marriage scores
 #histogram
-ggplot(clean_df, aes(x = MARRIAGE)) +
-  geom_histogram(binwidth = 20, fill = 'blue', color = 'black') +
-  theme_minimal() +
+ggplot(clean_df, aes(x = MARRIAGE, )) +
+  geom_histogram(binwidth = 20, fill = 'skyblue', color = 'black') +
+  stat_bin(binwidth = 20, geom = "text", aes(label = ..count..), vjust = -0.5) +
   labs(title = "Distribution of Marriage Scores", 
        x = "Marriage Score", 
-       y = "Frequency"
+       y = "Count"
   ) +
-  scale_x_continuous(breaks = seq(0, 100, by = 20)) +
-  theme_minimal()
+  theme(plot.title = element_text(hjust=0.5)) +
+  scale_x_continuous(breaks = seq(0, 100, by = 20))
   
 
 #density plot
@@ -249,7 +249,7 @@ cor_data <- clean_df %>%
   select(WBL.INDEX, MOBILITY, WORKPLACE, PAY, MARRIAGE, ENTREPRENEURSHIP, gdp_per_person_employed, GNI.per.capita, Foreign_direct_investment)
 
 #compute correlation matrix
-cor_matrix <- cor(cor_data, use = "complete.obs", method = "pearson")
+cor_matrix <- cor(cor_data, use = "complete.obs", method = "spearman")
 print(cor_matrix)
 
 #update row and column names
@@ -301,7 +301,8 @@ clean_df_without$WBL_Group <- factor(clean_df_without$WBL_Group)
 unique(clean_df_without$WBL_Group)
 table(clean_df_without$WBL_Group)
 
-
+print(median(clean_df_with$WBL.INDEX, na.rm = TRUE))
+print(median(clean_df_without$WBL.INDEX, na.rm = TRUE))
 ```
 ```{r}
 #t test for gdp by wbl group with high income group
@@ -329,7 +330,7 @@ t_test_gdp_without <- t.test(
   gdp_per_person_employed ~ WBL_Group,
   data = clean_df_without
 )
-print("T-test for GDP by WBL Group with High Income Included:")
+print("T-test for GDP by WBL Group with High Income Excluded:")
 print(t_test_gdp_without)
 
 #t test for gni by wbl group
@@ -337,12 +338,12 @@ t_test_gni_without <- t.test(
   GNI.per.capita ~ WBL_Group,
   data = clean_df_without
 )
-print("T-test for GNI by WBL Group with High Income Included: ")
+print("T-test for GNI by WBL Group with High Income Excluded: ")
 print(t_test_gni_without)
 
 ```
 
-> To create the WBL Groups, I calculated the median, then the countries with below the median were classified as "Low" and the countries above the median were classified as "High". In the t-test including the High Income group, there is a statistically significant difference in GDP per Person Employed and GNI per capita between the High and Low WBL groups. However, when we excluded the High Income group, there was no significant difference in GDP per Person Employer or GNI per Capita between the High and Low WBL groups. This indicates that the High Income group is driving the observed differences, which may suggest High Income nations disproportionarely influence global trends.
+> To create the WBL Groups, I calculated the median WBL Index Score, then the countries with below the median were classified as "Low" and the countries above the median were classified as "High". In the t-test including the High Income group, there is a statistically significant difference in GDP per Person Employed and GNI per capita between the High and Low WBL groups. However, when we excluded the High Income group, there was no significant difference in GDP per Person Employed or GNI per Capita between the High and Low WBL groups. This indicates that the High Income group is driving the observed differences, which may suggest High Income nations disproportionarely influence global trends.
 
 ```{r}
 ##chi-square test
@@ -431,7 +432,7 @@ print(p_value_without)
 #print observed difference
 cat("Observed difference: ", observed_diff_without)
 ```
-> The p-value for the test including the High Income Group indicates that none of the permutations produced a difference as extreme as the observed difference. This suggests that there is a significant relationship between the WBL group and the GDP when the High Income group is included. Also, the large observed difference further supports this results by highlighting that countries in the "High" WBL group have substantially higher GDP per person employed compared to those in the "Low" group. On the other hand, the p-value for test exluding the High Income group indicates no significant relationship between the WBL group and GDP. The observed difference of 1,650.767 is relatively low, which suggests that the distinction between "High" and "Low" WBL groups in terms of GDP becomes insignificant once the High Income countries are removed.
+> The p-value for the test including the High Income Group indicates that none of the permutations produced a difference as extreme as the observed difference. This suggests that there is a significant relationship between the WBL group and the GDP when the High Income group is included. Also, the large observed difference further supports this results by highlighting that countries in the "High" WBL group have substantially higher GDP per person employed compared to those in the "Low" group. On the other hand, the p-value for test excluding the High Income group indicates no significant relationship between the WBL group and GDP. The observed difference of 1,650.767 is relatively low, which suggests that the distinction between "High" and "Low" WBL groups in terms of GDP becomes insignificant once the High Income countries are removed.
 
 ```{r}
 ## monte carlo simulation
@@ -492,7 +493,30 @@ ggplot(clean_df_without, aes(x = WBL.INDEX, y = gdp_per_person_employed)) +
   geom_point(alpha = 0.6) +
   geom_smooth(method = "lm", se = FALSE, color = "blue") +
   labs(
-    title = "Relationship Between WBL Score and GDP (With High Income)",
+    title = "Relationship Between WBL Score and GDP (Without High Income)",
+    x = "WBL Score",
+    y = "GDP per Person Employed"
+  ) +
+  theme_minimal()
+```
+> While a higher WBL score may correlate slightly with higher GDP, outliers (high income group) are what is significantly driving the relationship - which is made evident by the shallow slope in the regression line. Variability suggests that cultural, political, and historical factors may play a more significant role in predicting economic success.
+
+```{r}
+ggplot(clean_df_without, aes(x = WBL.INDEX, y = GNI.per.capita)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Relationship Between WBL Score and GNI (With High Income)",
+    x = "WBL Score",
+    y = "GDP per Person Employed"
+  ) +
+  theme_minimal()
+
+ggplot(clean_df_without, aes(x = WBL.INDEX, y = GNI.per.capita)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Relationship Between WBL Score and GNI (Without High Income)",
     x = "WBL Score",
     y = "GDP per Person Employed"
   ) +
@@ -500,6 +524,45 @@ ggplot(clean_df_without, aes(x = WBL.INDEX, y = gdp_per_person_employed)) +
 ```
 
 
+```{r}
+economic_indicators = read.csv('data/raw-data/economic_indicators_2018.csv')
+colSums(is.na(economic_indicators))
+
+colnames(economic_indicators)
+unique(clean_df$Income.Group)
+
+# Filter rows where GNI or GDP data is missing
+missing_countries <- economic_indicators %>% 
+  filter(is.na(GNI.per.capita) | is.na(gdp_per_person_employed)) %>% 
+  select(Country.Name, GNI.per.capita, gdp_per_person_employed)
+
+# Display the result
+missing_countries
+
+```
+```{r}
+ggplot(clean_df, aes(x = Region, y = gdp_per_person_employed)) +
+  geom_bar(stat = "identity", fill = "#2D7DB4") +
+  labs(title = "GDP ($) by Region", x = "Region", y = "GDP $ (US Dollars)") +
+  theme(plot.title = element_text(hjust=0.5)) +
+  scale_x_discrete(labels = region_labels) +
+  theme(axis.text.x = element_text(angle = 45, hjust =1))
+```
+```{r}
+ggplot(clean_df_with, aes(x = WBL.INDEX)) +
+  geom_density(fill = 'lightpink', color = "black") +
+  geom_vline(aes(xintercept = median(WBL.INDEX, na.rm = TRUE)), color = "blue", linetype = "dashed", linewidth = 1) +
+  theme(plot.title = element_text(hjust=0.5)) +
+  labs(title = "Density of WBL Scores With High-Income Group", x = "WBL Score", y = "Density") +
+  annotate("text", x = median(clean_df_with$WBL.INDEX, na.rm = TRUE), y = 0.012, label = "Median", color = "blue", angle = 90, vjust = 1.5)
 
 
-> While a higher WBL score may correlate slightly with higher GDP, outliers (high income group) are what is significantly driving the relationship - which is made evident by the shallow slope in the regression line. Variability suggests that cultural, political, and historical factors may play a more significant role in predicting economic success.
+ggplot(clean_df_without, aes(x = WBL.INDEX)) +
+  geom_density(fill = 'lightblue', color = "black") +
+  geom_vline(aes(xintercept = median(WBL.INDEX, na.rm = TRUE)), color = "blue", linetype = "dashed", linewidth = 1) +
+  theme(plot.title = element_text(hjust=0.5)) +
+  labs(title = "Density of WBL Scores Without High-Income Group", x = "WBL Score", y = "Density") +
+  annotate("text", x = median(clean_df_without$WBL.INDEX, na.rm = TRUE), y = 0.012, label = "Median", color = "blue", angle = 90, vjust = 1.5)
+
+```
+
