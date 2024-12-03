@@ -20,15 +20,6 @@ clean_df <- raw_data[vector_2018, ]
 head(clean_df)
 ```
 
-
-
-```{r}
-#create data frame for 2018 data
-vector_2018 <- raw_data$Report.Year == 2018
-clean_df <- raw_data[vector_2018, ]
-
-head(clean_df)
-```
 ```{r}
 #sum any missing values
 sum(is.na(clean_df))
@@ -130,11 +121,11 @@ shapiro.test(gender_inequality_and_economic_indicators_dataset$Foreign_direct_in
 ```
 
 ```{r}
-# replacing with median
+# replacing with median 
 
-Foreign_direct_investment_median <- median(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment, na.rm = TRUE)
+# Foreign_direct_investment_median <- median(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment, na.rm = TRUE)
 
-gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment[is.na(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment)] <- Foreign_direct_investment_median 
+# gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment[is.na(gender_inequality_and_economic_indicators_dataset$Foreign_direct_investment)] <- Foreign_direct_investment_median 
 
 ```
 
@@ -146,17 +137,17 @@ shapiro.test(gender_inequality_and_economic_indicators_dataset$agriculture_fores
 ```{r}
 # replacing with median
 
-agriculture_forestry_value_added_median <- median(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added, na.rm = TRUE)
-print(agriculture_forestry_value_added_median)
+# agriculture_forestry_value_added_median <- median(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added, na.rm = TRUE)
+# print(agriculture_forestry_value_added_median)
 
-head(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
+# head(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
 
 ```
 
 ```{r}
-gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added[is.na(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)] <- agriculture_forestry_value_added_median
+# gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added[is.na(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)] <- agriculture_forestry_value_added_median
 
-head(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
+# head(gender_inequality_and_economic_indicators_dataset$agriculture_forestry_value_added)
 ```
 
 
@@ -169,9 +160,9 @@ shapiro.test(gender_inequality_and_economic_indicators_dataset$GNI.per.capita)
 ```{r}
 # replacing with median
 
-GNI.per.capita_median <- median(gender_inequality_and_economic_indicators_dataset$GNI.per.capita, na.rm = TRUE)
+# GNI.per.capita_median <- median(gender_inequality_and_economic_indicators_dataset$GNI.per.capita, na.rm = TRUE)
 
-gender_inequality_and_economic_indicators_dataset$GNI.per.capita[is.na(gender_inequality_and_economic_indicators_dataset$GNI.per.capita)] <- GNI.per.capita_median
+# gender_inequality_and_economic_indicators_dataset$GNI.per.capita[is.na(gender_inequality_and_economic_indicators_dataset$GNI.per.capita)] <- GNI.per.capita_median
 
 ```
 
@@ -184,9 +175,9 @@ shapiro.test(gender_inequality_and_economic_indicators_dataset$net_barter_terms_
 ```{r}
 # replacing with median
 
-net_barter_terms_of_trade_index_median <- median(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index, na.rm = TRUE)
+# net_barter_terms_of_trade_index_median <- median(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index, na.rm = TRUE)
 
-gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index[is.na(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index)] <- net_barter_terms_of_trade_index_median
+# gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index[is.na(gender_inequality_and_economic_indicators_dataset$net_barter_terms_of_trade_index)] <- net_barter_terms_of_trade_index_median
 
 
 ```
@@ -198,14 +189,72 @@ shapiro.test(gender_inequality_and_economic_indicators_dataset$gdp_per_person_em
 ```
 ```{r}
 # replacing with median
-gdp_per_person_employed_median <- median(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed, na.rm = TRUE)
+# gdp_per_person_employed_median <- median(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed, na.rm = TRUE)
 
 
-gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed[is.na(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed)] <- gdp_per_person_employed_median
+# gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed[is.na(gender_inequality_and_economic_indicators_dataset$gdp_per_person_employed)] <- gdp_per_person_employed_median
 
 ```
 
+```{r}
 
+library(dplyr)
+
+# Grouping by income group and imputing medians for each group
+
+# Foreign Direct Investment
+Foreign_direct_investment_median <- gender_inequality_and_economic_indicators_dataset %>%
+    group_by(Income.Group) %>%
+    summarize(median_fdi = median(Foreign_direct_investment, na.rm = TRUE))
+
+gender_inequality_and_economic_indicators_dataset <- gender_inequality_and_economic_indicators_dataset %>%
+    left_join(Foreign_direct_investment_median, by = "Income.Group") %>%
+    mutate(Foreign_direct_investment = ifelse(is.na(Foreign_direct_investment), median_fdi, Foreign_direct_investment)) %>%
+    select(-median_fdi)
+
+# Agriculture, Forestry, and Value Added
+agriculture_forestry_value_added_median <- gender_inequality_and_economic_indicators_dataset %>%
+    group_by(Income.Group) %>%
+    summarize(median_agri = median(agriculture_forestry_value_added, na.rm = TRUE))
+
+gender_inequality_and_economic_indicators_dataset <- gender_inequality_and_economic_indicators_dataset %>%
+    left_join(agriculture_forestry_value_added_median, by = "Income.Group") %>%
+    mutate(agriculture_forestry_value_added = ifelse(is.na(agriculture_forestry_value_added), median_agri, agriculture_forestry_value_added)) %>%
+    select(-median_agri)
+
+# GNI per Capita
+GNI_per_capita_median <- gender_inequality_and_economic_indicators_dataset %>%
+    group_by(Income.Group) %>%
+    summarize(median_gni = median(GNI.per.capita, na.rm = TRUE))
+
+gender_inequality_and_economic_indicators_dataset <- gender_inequality_and_economic_indicators_dataset %>%
+    left_join(GNI_per_capita_median, by = "Income.Group") %>%
+    mutate(GNI.per.capita = ifelse(is.na(GNI.per.capita), median_gni, GNI.per.capita)) %>%
+    select(-median_gni)
+
+# Net Barter Terms of Trade Index
+net_barter_terms_of_trade_index_median <- gender_inequality_and_economic_indicators_dataset %>%
+    group_by(Income.Group) %>%
+    summarize(median_trade = median(net_barter_terms_of_trade_index, na.rm = TRUE))
+
+gender_inequality_and_economic_indicators_dataset <- gender_inequality_and_economic_indicators_dataset %>%
+    left_join(net_barter_terms_of_trade_index_median, by = "Income.Group") %>%
+    mutate(net_barter_terms_of_trade_index = ifelse(is.na(net_barter_terms_of_trade_index), median_trade, net_barter_terms_of_trade_index)) %>%
+    select(-median_trade)
+
+# GDP per Person Employed
+gdp_per_person_employed_median <- gender_inequality_and_economic_indicators_dataset %>%
+    group_by(Income.Group) %>%
+    summarize(median_gdp = median(gdp_per_person_employed, na.rm = TRUE))
+
+gender_inequality_and_economic_indicators_dataset <- gender_inequality_and_economic_indicators_dataset %>%
+    left_join(gdp_per_person_employed_median, by = "Income.Group") %>%
+    mutate(gdp_per_person_employed = ifelse(is.na(gdp_per_person_employed), median_gdp, gdp_per_person_employed)) %>%
+    select(-median_gdp)
+
+
+
+```
 
 ```{r}
 # rounding to two decimal points 

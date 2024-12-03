@@ -60,7 +60,9 @@ ggplot(df_pay_percent, aes(x = Region, y = percent_no_remuneration)) +
          x = "Region",
          y = "'No' Percentage") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
+```{r}
 # Plot for percent_no_night
 ggplot(df_pay_percent, aes(x = Region, y = percent_no_night)) +
     geom_bar(stat = "identity") +
@@ -68,7 +70,9 @@ ggplot(df_pay_percent, aes(x = Region, y = percent_no_night)) +
          x = "Region",
          y = "'No' Percentage") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
+```{r}
 # Plot for percent_no_dangerous
 ggplot(df_pay_percent, aes(x = Region, y = percent_no_dangerous)) +
     geom_bar(stat = "identity") +
@@ -76,7 +80,9 @@ ggplot(df_pay_percent, aes(x = Region, y = percent_no_dangerous)) +
          x = "Region",
          y = "'No' Percentage") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
+```{r}
 # Plot for percent_no_industrial
 ggplot(df_pay_percent, aes(x = Region, y = percent_no_industrial)) +
     geom_bar(stat = "identity") +
