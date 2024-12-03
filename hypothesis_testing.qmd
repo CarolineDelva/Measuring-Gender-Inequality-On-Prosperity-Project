@@ -3,31 +3,57 @@ library(dplyr)
 library(ggplot2)
 library(naniar)
 library(VIM)
+library(corrplot)
+library(tidyr)
+library(knitr)
+
+set.seed(5100)
 ```
+> I started with reading in the data and dividing it into two data frames: one that contains the High Income group and one that excludes the High Income group.
 
 ```{r}
 clean_df = read.csv('data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv')
-print(head(clean_df))
+
+#df with high income group
+clean_df_with <- clean_df
+
+#df without high income group
+clean_df_without <- clean_df %>% filter(Region != "High income: OECD")
+
+#row count
+nrow(clean_df_with)
+nrow(clean_df_without)
+
+#unique regions
+unique(clean_df_with$Region)
+unique(clean_df_without$Region)
+
+
+
 ```
 
 ```{r}
 colSums(is.na(clean_df))
 ```
 
+> These cells were to visualize the missing data
+
 ```{r}
-vis_miss(clean_df)
+#vis_miss(clean_df)
 ```
 
 ```{r}
-vis_miss(clean_df %>% select(Foreign_direct_investment, agriculture_forestry_value_added, GNI.per.capita, net_barter_terms_of_trade_index, gdp_per_person_employed))
+#vis_miss(clean_df %>% select(Foreign_direct_investment, agriculture_forestry_value_added, GNI.per.capita, net_barter_terms_of_trade_index, gdp_per_person_employed))
 
 ```
 
 ```{r}
 
-aggr(clean_df, col = c("skyblue", "red"), numbers = TRUE, sortVars = TRUE, gap = 3, cex.axis = 0.7)
+#aggr(clean_df, col = c("skyblue", "red"), numbers = TRUE, sortVars = TRUE, gap = 3, cex.axis = 0.7)
 
 ```
+
+> Once I saw that the economic indicators were missing values, I decided that filling with the median would work best, as to not skew any calculations
 
 ```{r}
 ##fill missing values with median
@@ -37,6 +63,12 @@ columns_to_impute <- c("Foreign_direct_investment",
                        "GNI.per.capita", 
                        "net_barter_terms_of_trade_index", 
                        "gdp_per_person_employed")
+#check for NAs in the economic indicators groups by Country
+na_by_economy <- clean_df %>%
+  select(Economy, all_of(columns_to_impute)) %>%
+  #group_by(Economy) %>%
+  summarise(across(everything(), ~ sum(is.na(.)), .names = "NA_{col}")) %>%
+  arrange(desc(across(starts_with("NA_"))))
 
 #apply median calculation
 for (col in columns_to_impute) {
@@ -49,13 +81,425 @@ filled_summary
 ```
 
 ```{r}
+#summary stats for marriage data
+marriage_summary <- clean_df %>%
+  group_by(Region) %>%
+  summarise(
+    Mean_Marriage_Score = mean(MARRIAGE, na.rm = TRUE),
+    Median_Marriage_Score = median(MARRIAGE, na.rm = TRUE),
+    SD_Marriage_Score = sd(MARRIAGE, na.rm = TRUE)
+  )
 
+print(marriage_summary)
+```
+
+> I performed some summary statistics of the marriage indicators. East Asia & Pacific, Europe & Central Asia, High Income, and Latin America & Caribbean had significantly high marriage score statistics compared to Sub-Saharan Africa, South Asia and Middle East & North Africa. It's also important to note the standard deviations so that we are taking into account the actual spread of scores. For example, Although East Asia & Pacific have a significantly high median, their mean is 14 points less and the standard deviation has a spread of 20 points. SUb-Saharan Africa is also a region to take note of with a spread of 30 points.
+
+```{r}
+##distribution of marriage scores
+#histogram
+ggplot(clean_df, aes(x = MARRIAGE)) +
+  geom_histogram(binwidth = 20, fill = 'blue', color = 'black') +
+  theme_minimal() +
+  labs(title = "Distribution of Marriage Scores", 
+       x = "Marriage Score", 
+       y = "Frequency"
+  ) +
+  scale_x_continuous(breaks = seq(0, 100, by = 20)) +
+  theme_minimal()
+  
+
+#density plot
+ggplot(clean_df, aes(x = MARRIAGE)) +
+  geom_density(fill = 'skyblue', alpha=0.5, color = "black") +
+  geom_vline(aes(xintercept = mean(MARRIAGE, na.rm = TRUE)), color = "red", linetype = "dashed", linewidth = 1) +
+  geom_vline(aes(xintercept = median(MARRIAGE, na.rm = TRUE)), color = "blue", linetype = "dashed", linewidth = 1) +
+  theme_minimal() +
+  labs(title = "Density of Marriage Score", x = "Marriage Score", y = "Density") +
+  annotate("text", x = mean(clean_df$MARRIAGE, na.rm = TRUE), y = 0.015, label = "Mean", color = "red", angle = 90, vjust = 1.5) +
+  annotate("text", x = median(clean_df$MARRIAGE, na.rm = TRUE), y = 0.012, label = "Median", color = "blue", angle = 90, vjust = 1.5)
+
+print(mean(clean_df_with$MARRIAGE))
+print(median(clean_df_with$MARRIAGE))
+```
+> When we look at the distribution and density of the Marriage Scores, a significant portion of the scores lie within the range of 70 to 100. The mean score across all regions being 77.2 and the median being 80.
+
+```{r}
+# look up table for region abbreviations
+region_labels <- c(
+  "East Asia & Pacific" = "EAP",
+  "Europe & Central Asia" = "ECA",
+  "High income: OECD" = "HIC",
+  "Latin America & Caribbean" = "LAC",
+  "Middle East & North Africa" = "MENA",
+  "South Asia" = "SA",
+  "Sub-Saharan Africa" = "SSA"
+)
+```
+
+
+
+
+```{r}
+#compare marriage score across regions
+ggplot(clean_df, aes(x = Region, y = MARRIAGE, fill = Region)) +
+  geom_boxplot() +
+  scale_x_discrete(labels = region_labels) +
+  theme(axis.text.x = element_text(angle = 45, hjust =1)) +
+  labs(title = "Marriage Scores by Region", x = "Region", y = "Marriage Score")
+```
+
+ > The High Income group has the highest marriage score, which is tightly clustered around 100 with no significant variability. This indicates consistent gender equality in marriage within the countries included in this group. Sub-Saharan Africa has the widest range of scores, with outlier as low as zero and scores spread from 25 to 100. This is indicative of significant variability in marriage laws within this region. Middle East & North Africa's score are generally low, with the median around 25 and some outliers. This suggests less gender equality in marriage-related laws in this region. South Asia's scores are clustered between 50 and 100 with some variability which indicates mixed progress toward gender equality in marriage-related laws. East Asia & Pacific and Europe & Central Asia's scores are consistently high, clustering around 100 - suggesting advanced gender equality in these regions' marital laws. Latin America and Caribbean have a median score of about 75 which moderate variability. This indicates a mixed level of progress across this region as well.
+ 
+
+```{r}
+#select marriage-related categorical columns
+marriage_categorical <- clean_df %>%
+  select(Region,
+         Is.the.law.free.of.legal.provisions.that.require.a.married.woman.to.obey.her.husband.,
+         Can.a.woman.be.head.of.household.in.the.same.way.as.a.man.,
+         Is.there.legislation.specifically.addressing.domestic.violence.,
+         Can.a.woman.obtain.a.judgment.of.divorce.in.the.same.way.as.a.man.,
+         Does.a.woman.have.the.same.rights.to.remarry.as.a.man.)
+
+#convert long for visualization
+marriage_long <- marriage_categorical %>%
+  pivot_longer(cols = -Region, names_to = "Indicator", values_to = "Response")
+
+#calculate proportions
+marriage_proportions <- marriage_long %>%
+  group_by(Region, Indicator, Response) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  mutate(Proportion = Count / sum(Count))
+
+print(marriage_proportions)
 ```
 
 ```{r}
+# look up table for marriage indicators
+marriage_labels <- c(
+  "Is.the.law.free.of.legal.provisions.that.require.a.married.woman.to.obey.her.husband." = "Obey Husband",
+  "Can.a.woman.be.head.of.household.in.the.same.way.as.a.man." = "Head of Household",
+  "Is.there.legislation.specifically.addressing.domestic.violence." = "Domestic Violence",
+  "Can.a.woman.obtain.a.judgment.of.divorce.in.the.same.way.as.a.man." = "Judgment of Divorce",
+  "Does.a.woman.have.the.same.rights.to.remarry.as.a.man." = "Remarriage Rights"
+)
+
+unique(marriage_proportions$Indicator)
+```
+
+```{r}
+#visualize proportions
+ggplot(marriage_proportions, aes(x = Region, y = Proportion, fill = Response)) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(~Indicator, scales = "free", labeller = labeller(Indicator = marriage_labels)) +
+  scale_x_discrete(labels = region_labels) +
+  theme(axis.text.x = element_text(angle = 45, hjust =1)) +
+  labs(title = "Proportions of Yes/No Responses for Marriage Indicators By Region",
+       x = "Region", y = "Proportion")
+
+```
+
+> Head of Household: Most regions have a high proportion of "yes" response, indicating that women can generally be the head of housefold in the same way as men. However, for Sub-Saharan Africa and Middle East & North Africa, there are slighly lower proportions of "yes" responses, compared to the other regions, suggesting gender inequality in this area.
+> Judgement of Divorce: High Income, Europe and Central Asia, and East Asia and Pacific have almost universal "yes" responses, indicating equitable divorce laws. Middle East & North Africa has a significant proportion of "no" reponses. This suggests women face legal barrier in divorce.
+> Remarriage Rights: Similar trends to Judgement of Divorces.
+> Obey Husband: Middle East & North Africa has a high proportion of 'no' responsesm which may indicate the existence of laws that require a married women to obey her husband while most other regions show "yes" responses, suggesting that such laws do not exist.
+> Domestic Violence: High Income, Europe & Central Asia, and East Asia & Pacific show high yield of 'yes' responses, indicating legislation against domestic violence, which Middle East & North Africa, Sub-Saharan Africa, and South Asia show high yield of 'no' reponses, indicating weaker, or non-existent legislation in these regions.
+
+```{r}
+#scatter plot for marriage score vs gpd per person employed
+ggplot(clean_df, aes(x = MARRIAGE, y = gdp_per_person_employed)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "red") +
+  theme_minimal() +
+  labs(title = "Marriage Score vs GDP per Person Employed",
+       x = "Marriage Score", y = "GDP per Person Employed")
+
+#scatter plot for marriage score vs gni per capita
+ggplot(clean_df, aes(x = MARRIAGE, y = GNI.per.capita)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "blue") +
+  theme_minimal() +
+  labs(title = "Marriage Score vs GNI per Capita",
+       x = "Marriage Score", y = "GNI per Capita")
+```
+
+> The scatterpkots depict the relationship between Marriage Score and GDP per Person Employed and GNI per Capita. Although the correlation line appears to slightly increase, looking at the points for the different regions, it is clear that there is much variability of marriage score when compared to GNI and GDP, shows by the spread of the points along the x-axis. This suggests that countries with similar GDP or GNI can have vastly different marriage scores, highlighting that economic outcomes alone may not fully explain differences in gender-related legal metrics. The minor slope of the libes and the spread of points suggest weak correlations. The marriage Score alone is not strongly predictive of either GDP per Person Employed or GNI per Capita, aligning with the earlier statistical findings.
+
+```{r}
+# name vector for correlation matrix
+variable_labels <- c(
+  "WBL.INDEX" = "WBL Index",
+  "MOBILITY" = "Mobility",
+  "WORKPLACE" = "Workplace",
+  "PAY" = "Pay",
+  "MARRIAGE" = "Marriage",
+  "ENTREPRENEURSHIP" = "Entrepreneurship",
+  "gdp_per_person_employed" = "GDP per Person",
+  "GNI.per.capita" = "GNI per Capita",
+  "Foreign_direct_investment" = "FDI"
+)
+```
+
+
+```{r}
+## correlation analysis - relationship between inequality and economic indicators
+#select relevant columns
+cor_data <- clean_df %>%
+  select(WBL.INDEX, MOBILITY, WORKPLACE, PAY, MARRIAGE, ENTREPRENEURSHIP, gdp_per_person_employed, GNI.per.capita, Foreign_direct_investment)
+
+#compute correlation matrix
+cor_matrix <- cor(cor_data, use = "complete.obs", method = "pearson")
+print(cor_matrix)
+
+#update row and column names
+rownames(cor_matrix) <- variable_labels
+colnames(cor_matrix) <- variable_labels
+
+#visualize correlation matrix
+corrplot(cor_matrix,
+         title = "Correlation Matrix",
+         method = "circle",
+         type = "upper",
+         tl.cex = 0.8,
+         mar = c(0, 0, 1, 0)
+)
+```
+
+> the WBL Index has significant positive correlations with our selected variables. This suggests that as the overall WBL score increases, legal indicators in these areas also improve. (marriage shows a weaker correlation compared to other variables). GDP per Person Employed and GNI per Capita have weaker correlations with all variables including WBL Index. This emphasizes my previous findings that economic outcomes are not strongly tied to gender-related legal protections. FDI has low or negative correlations across the board. A strong cluster of positive correaltions exists among Mobility, Workplace, Pay, and Entrepreneurship, which suggests improvemtns in one area often accompany improvements in others.
+
+```{r}
+summary(clean_df$WBL.INDEX)
+
+invalid_rows <- clean_df[is.na(clean_df$WBL.INDEX) & clean_df$WBL.INDEX != "NA", ]
+print(invalid_rows)
+
+#convert WBL.INDEX from character to numeric
+clean_df$WBL.INDEX <- as.numeric(as.character(clean_df$WBL.INDEX))
 
 ```
 
 
 
 
+
+```{r}
+
+## t-test for group comparisons
+#group based on median index score
+clean_df_with$WBL_Group <- ifelse(clean_df_with$WBL.INDEX >= median(clean_df_with$WBL.INDEX, na.rm = TRUE), "High", "Low")
+
+clean_df_with$WBL_Group <- factor(clean_df_with$WBL_Group)
+
+unique(clean_df_with$WBL_Group)
+table(clean_df_with$WBL_Group)
+
+clean_df_without$WBL_Group <- ifelse(clean_df_without$WBL.INDEX >= median(clean_df_without$WBL.INDEX, na.rm = TRUE), "High", "Low")
+
+clean_df_without$WBL_Group <- factor(clean_df_without$WBL_Group)
+
+unique(clean_df_without$WBL_Group)
+table(clean_df_without$WBL_Group)
+
+
+```
+```{r}
+#t test for gdp by wbl group with high income group
+t_test_gdp_with <- t.test(
+  gdp_per_person_employed ~ WBL_Group,
+  data = clean_df_with
+)
+print("T-test for GDP by WBL Group with High Income Included:")
+print(t_test_gdp_with)
+
+#t test for gni by wbl group
+t_test_gni_with <- t.test(
+  GNI.per.capita ~ WBL_Group,
+  data = clean_df_with
+)
+print("T-test for GNI by WBL Group with High Income Included:")
+print(t_test_gni_with)
+
+```
+
+
+```{r}
+#t test for gdp by wbl group without high income group
+t_test_gdp_without <- t.test(
+  gdp_per_person_employed ~ WBL_Group,
+  data = clean_df_without
+)
+print("T-test for GDP by WBL Group with High Income Included:")
+print(t_test_gdp_without)
+
+#t test for gni by wbl group
+t_test_gni_without <- t.test(
+  GNI.per.capita ~ WBL_Group,
+  data = clean_df_without
+)
+print("T-test for GNI by WBL Group with High Income Included: ")
+print(t_test_gni_without)
+
+```
+
+> To create the WBL Groups, I calculated the median, then the countries with below the median were classified as "Low" and the countries above the median were classified as "High". In the t-test including the High Income group, there is a statistically significant difference in GDP per Person Employed and GNI per capita between the High and Low WBL groups. However, when we excluded the High Income group, there was no significant difference in GDP per Person Employer or GNI per Capita between the High and Low WBL groups. This indicates that the High Income group is driving the observed differences, which may suggest High Income nations disproportionarely influence global trends.
+
+```{r}
+##chi-square test
+#create contingency table and run test
+
+#with high income
+chi_table_with <- table(clean_df_with$WBL_Group, clean_df_with$Region)
+chi_test_with <- chisq.test(chi_table_with)
+
+#without high income
+chi_table_without <- table(clean_df_without$WBL_Group, clean_df_without$Region)
+chi_test_without <- chisq.test(chi_table_without)
+
+
+#results
+print("Chi-square Test with High Income Group Included:")
+print(chi_test_with)
+print("Chi_square Test without High Income Group Excluded:")
+print(chi_test_without)
+```
+> Both tests have extremely small p-values, indicating strong evidence to reject the null hypothesis. The inclusion of the High Income group has a significant impact on the test statistic and degrees of freedom. Within the test with the High Income group included, he chi-squared statistic is much higher. This is likely due to the disproportionate representation of countries with high WBL scores in that group, adding more variability to the analysis as a whole. Without the High Income group, the association remains significant but the test statistic is smaller. This could indicate that removing the High Income group results in fewer extreme differences between observed and expected values. It is important to note that the warning suggests that some frequencies might be too small to trust the approximation fully, which is why I also used the Monte Carlo simulation.
+
+```{r}
+##visualize the contingency table
+#convert table to data frame
+chi_df_with <- as.data.frame(chi_table_with)
+colnames(chi_df_with) <- c("WBL_Group", "Region", "Count")
+
+chi_df_without <- as.data.frame(chi_table_without)
+colnames(chi_df_without) <- c("WBL_Group", "Region", "Count")
+
+#bar plot
+ggplot(chi_df_with, aes(x = Region, y = Count, fill = WBL_Group)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Distribution of WBL Groups by Region", x = "Region", y = "Count") +
+  scale_x_discrete(labels = region_labels) +
+  theme(axis.text.x = element_text(angle = 45, hjust =1))
+
+ggplot(chi_df_without, aes(x = Region, y = Count, fill = WBL_Group)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Distribution of WBL Groups by Region", x = "Region", y = "Count") +
+  scale_x_discrete(labels = region_labels) +
+  theme(axis.text.x = element_text(angle = 45, hjust =1))
+```
+
+
+```{r}
+## permutation test
+#observed difference in gdp means with high income
+observed_diff_with <- mean(clean_df_with$gdp_per_person_employed[clean_df_with$WBL_Group =="High"], na.rm = TRUE) -
+  mean(clean_df_with$gdp_per_person_employed[clean_df_with$WBL_Group == "Low"], na.rm = TRUE)
+
+#permutation test
+perm_diff_with <- replicate(10000, {
+  permuted_with <- sample(clean_df_with$WBL_Group)
+  mean(clean_df_with$gdp_per_person_employed[permuted_with == "High"], na.rm = TRUE) -
+    mean(clean_df_with$gdp_per_person_employed[permuted_with == "Low"], na.rm = TRUE)
+})
+print("Permutation Test Results including High Income Group:")
+#calculate p value
+p_value_with <- mean(abs(perm_diff_with) >= abs(observed_diff_with))
+print(p_value_with)
+
+#print observed difference
+cat("Observed difference: ", observed_diff_with)
+
+##########################################
+
+#observed difference in gdp means
+observed_diff_without <- mean(clean_df_without$gdp_per_person_employed[clean_df_without$WBL_Group =="High"], na.rm = TRUE) -
+  mean(clean_df_without$gdp_per_person_employed[clean_df_without$WBL_Group == "Low"], na.rm = TRUE)
+
+#permutation test
+perm_diff_without <- replicate(10000, {
+  permuted_without <- sample(clean_df_without$WBL_Group)
+  mean(clean_df_without$gdp_per_person_employed[permuted_without == "High"], na.rm = TRUE) -
+    mean(clean_df_without$gdp_per_person_employed[permuted_without == "Low"], na.rm = TRUE)
+})
+
+#calculate p value
+print("")
+print("Permutation Results Excluding High Income Group:")
+p_value_without <- mean(abs(perm_diff_without) >= abs(observed_diff_without))
+print(p_value_without)
+
+#print observed difference
+cat("Observed difference: ", observed_diff_without)
+```
+> The p-value for the test including the High Income Group indicates that none of the permutations produced a difference as extreme as the observed difference. This suggests that there is a significant relationship between the WBL group and the GDP when the High Income group is included. Also, the large observed difference further supports this results by highlighting that countries in the "High" WBL group have substantially higher GDP per person employed compared to those in the "Low" group. On the other hand, the p-value for test exluding the High Income group indicates no significant relationship between the WBL group and GDP. The observed difference of 1,650.767 is relatively low, which suggests that the distinction between "High" and "Low" WBL groups in terms of GDP becomes insignificant once the High Income countries are removed.
+
+```{r}
+## monte carlo simulation
+#function to simulation gdp based on wbl index
+simulation_gdp <- function(data, n_sim) {
+  results <- replicate(n_sim, {
+    #sample wbl index values with replacement
+    sampled_index <- sample(data$WBL.INDEX, size = nrow(data), replace = TRUE)
+    
+    #simulate gdp (linear model with noise)
+    simulated_gdp <- 500 * sampled_index + rnorm(nrow(data), mean = 0, sd = 10000)
+    mean(simulated_gdp) #return mean gdp for simulation
+  })
+  return(results)
+}
+
+#simulate for both datasets
+gdp_with <- simulation_gdp(clean_df_with, 10000)
+gdp_without <- simulation_gdp(clean_df_without, 10000)
+
+#summarize results
+print("Monte Carlo Including High Income Group:")
+summary(gdp_with)
+print("Monte Carlo Excluding High Income Group:")
+summary(gdp_without)
+```
+
+
+```{r}
+##visualize to compare monte carlo results
+#combine results into df
+simulation_results <- data.frame(
+  GDP = c(gdp_with, gdp_without),
+  Dataset = rep(c("With High Income", "Without High Income"), each = 10000)
+)
+
+#density plot
+ggplot(simulation_results, aes(x = GDP, fill = Dataset)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Simulated GDP Distributions", x = "GDP", y = "Density")
+```
+
+> the distribution including the High Income group has a higher central tendency (median and mean) compared to the dataset without the High Income group. Even thought the quartiles of the two distributions do not drastically differ, the inclusion of the high income group result in statistical significance, likely due to the overall higher GDP values and their concentration in the "High" WBL group. This inflates the observed difference in means between the groups. 
+
+```{r}
+## scatter plot with regression line to show lack of correlation between GDP and WBL Score
+ggplot(clean_df_with, aes(x = WBL.INDEX, y = gdp_per_person_employed)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(
+    title = "Relationship Between WBL Score and GDP (With High Income)",
+    x = "WBL Score",
+    y = "GDP per Person Employed"
+  ) +
+  theme_minimal()
+
+ggplot(clean_df_without, aes(x = WBL.INDEX, y = gdp_per_person_employed)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(
+    title = "Relationship Between WBL Score and GDP (With High Income)",
+    x = "WBL Score",
+    y = "GDP per Person Employed"
+  ) +
+  theme_minimal()
+```
+
+
+
+
+> While a higher WBL score may correlate slightly with higher GDP, outliers (high income group) are what is significantly driving the relationship - which is made evident by the shallow slope in the regression line. Variability suggests that cultural, political, and historical factors may play a more significant role in predicting economic success.
