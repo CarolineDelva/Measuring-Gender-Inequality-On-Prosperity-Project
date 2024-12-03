@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.55">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>hypothesis_testing</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="hypothesis_testing_files/libs/clipboard/clipboard.min.js"></script>
+<script src="hypothesis_testing_files/libs/quarto-html/quarto.js"></script>
+<script src="hypothesis_testing_files/libs/quarto-html/popper.min.js"></script>
+<script src="hypothesis_testing_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="hypothesis_testing_files/libs/quarto-html/anchor.min.js"></script>
+<link href="hypothesis_testing_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="hypothesis_testing_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="hypothesis_testing_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="hypothesis_testing_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="hypothesis_testing_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(naniar)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(VIM)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: colorspace</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: grid</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>VIM is ready to use.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Suggestions and bug-reports can be submitted at: https://github.com/statistikat/VIM/issues</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'VIM'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:datasets':
+
+    sleep</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>corrplot 0.95 loaded</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">5100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p>I started with reading in the data and dividing it into two data frames: one that contains the High Income group and one that excludes the High Income group.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>clean_df <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">'data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv'</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#df with high income group</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>clean_df_with <span class="ot">&lt;-</span> clean_df</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#df without high income group</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>clean_df_without <span class="ot">&lt;-</span> clean_df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Region <span class="sc">!=</span> <span class="st">"High income: OECD"</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#row count</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(clean_df_with)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 190</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(clean_df_without)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 156</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#unique regions</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(clean_df_with<span class="sc">$</span>Region)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "South Asia"                 "Europe &amp; Central Asia"     
+[3] "Middle East &amp; North Africa" "Sub-Saharan Africa"        
+[5] "Latin America &amp; Caribbean"  "High income: OECD"         
+[7] "East Asia &amp; Pacific"       </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(clean_df_without<span class="sc">$</span>Region)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "South Asia"                 "Europe &amp; Central Asia"     
+[3] "Middle East &amp; North Africa" "Sub-Saharan Africa"        
+[5] "Latin America &amp; Caribbean"  "East Asia &amp; Pacific"       </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(clean_df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                               Economy 
+                                                                                     0 
+                                                                          Economy.Code 
+                                                                                     0 
+                                                                              ISO.Code 
+                                                                                     0 
+                                                                                Region 
+                                                                                     0 
+                                                                          Income.Group 
+                                                                                     0 
+                                                                           Report.Year 
+                                                                                     0 
+                                                                             WBL.INDEX 
+                                                                                     0 
+                                                                              MOBILITY 
+                                                                                     0 
+                            Can.a.woman.choose.where.to.live.in.the.same.way.as.a.man. 
+                                                                                     0 
+                         Can.a.woman.travel.outside.her.home.in.the.same.way.as.a.man. 
+                                                                                     0 
+                            Can.a.woman.apply.for.a.passport.in.the.same.way.as.a.man. 
+                                                                                     0 
+                      Can.a.woman.travel.outside.the.country.in.the.same.way.as.a.man. 
+                                                                                     0 
+                                                                             WORKPLACE 
+                                                                                     0 
+                                       Can.a.woman.get.a.job.in.the.same.way.as.a.man. 
+                                                                                     0 
+                   Does.the.law.prohibit.discrimination.in.employment.based.on.gender. 
+                                                                                     0 
+                              Is.there.legislation.on.sexual.harassment.in.employment. 
+                                                                                     0 
+   Are.there.criminal.penalties.or.civil.remedies.for.sexual.harassment.in.employment. 
+                                                                                     0 
+                                                                                   PAY 
+                                                                                     0 
+                      Does.the.law.mandate.equal.remuneration.for.work.of.equal.value. 
+                                                                                     0 
+                                   Can.a.woman.work.at.night.in.the.same.way.as.a.man. 
+                                                                                     0 
+                  Can.a.woman.work.in.a.job.deemed.dangerous.in.the.same.way.as.a.man. 
+                                                                                     0 
+                       Can.a.woman.work.in.an.industrial.job.in.the.same.way.as.a.man. 
+                                                                                     0 
+                                                                              MARRIAGE 
+                                                                                     0 
+ Is.the.law.free.of.legal.provisions.that.require.a.married.woman.to.obey.her.husband. 
+                                                                                     0 
+                            Can.a.woman.be.head.of.household.in.the.same.way.as.a.man. 
+                                                                                     0 
+                       Is.there.legislation.specifically.addressing.domestic.violence. 
+                                                                                     0 
+                    Can.a.woman.obtain.a.judgment.of.divorce.in.the.same.way.as.a.man. 
+                                                                                     0 
+                                Does.a.woman.have.the.same.rights.to.remarry.as.a.man. 
+                                                                                     0 
+                                                                            PARENTHOOD 
+                                                                                     0 
+                              Is.paid.leave.of.at.least.14.weeks.available.to.mothers. 
+                                                                                     0 
+                                                        Length.of.paid.maternity.leave 
+                                                                                     0 
+               Does.the.government.administer.100.percent.of.maternity.leave.benefits. 
+                                                                                     0 
+                                             Is.there.paid.leave.available.to.fathers. 
+                                                                                     0 
+                                                        Length.of.paid.paternity.leave 
+                                                                                     0 
+                                                         Is.there.paid.parental.leave. 
+                                                                                     0 
+                                                                           Shared.days 
+                                                                                     0 
+                                                                   Days.for.the.mother 
+                                                                                     0 
+                                                                   Days.for.the.father 
+                                                                                     0 
+                                          Is.dismissal.of.pregnant.workers.prohibited. 
+                                                                                     0 
+                                                                      ENTREPRENEURSHIP 
+                                                                                     0 
+             Does.the.law.prohibit.discrimination.in.access.to.credit.based.on.gender. 
+                                                                                     0 
+                                 Can.a.woman.sign.a.contract.in.the.same.way.as.a.man. 
+                                                                                     0 
+                             Can.a.woman.register.a.business.in.the.same.way.as.a.man. 
+                                                                                     0 
+                             Can.a.woman.open.a.bank.account.in.the.same.way.as.a.man. 
+                                                                                     0 
+                                                                                ASSETS 
+                                                                                     0 
+                   Do.women.and.men.have.equal.ownership.rights.to.immovable.property. 
+                                                                                     0 
+         Do.sons.and.daughters.have.equal.rights.to.inherit.assets.from.their.parents. 
+                                                                                     0 
+             Do.male.and.female.surviving.spouses.have.equal.rights.to.inherit.assets. 
+                                                                                     0 
+Does.the.law.grant.spouses.equal.administrative.authority.over.assets.during.marriage. 
+                                                                                     0 
+                  Does.the.law.provide.for.the.valuation.of.nonmonetary.contributions. 
+                                                                                     0 
+                                                                               PENSION 
+                                                                                     0 
+     Is.the.age.at.which.women.and.men.can.retire.with.full.pension.benefits.the.same. 
+                                                                                     0 
+  Is.the.age.at.which.women.and.men.can.retire.with.partial.pension.benefits.the.same. 
+                                                                                     0 
+                           Is.the.mandatory.retirement.age.for.women.and.men.the.same. 
+                                                                                     0 
+            Are.periods.of.absence.due.to.childcare.accounted.for.in.pension.benefits. 
+                                                                                     0 
+                                                                                 match 
+                                                                                     0 
+                                                                                     X 
+                                                                                     1 
+                                                                          Country.Code 
+                                                                                     1 
+                                                             Foreign_direct_investment 
+                                                                                     0 
+                                                      agriculture_forestry_value_added 
+                                                                                     0 
+                                                                        GNI.per.capita 
+                                                                                     0 
+                                                       net_barter_terms_of_trade_index 
+                                                                                     0 
+                                                               gdp_per_person_employed 
+                                                                                     0 </code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>These cells were to visualize the missing data</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">#vis_miss(clean_df)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">#vis_miss(clean_df %&gt;% select(Foreign_direct_investment, agriculture_forestry_value_added, GNI.per.capita, net_barter_terms_of_trade_index, gdp_per_person_employed))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">#aggr(clean_df, col = c("skyblue", "red"), numbers = TRUE, sortVars = TRUE, gap = 3, cex.axis = 0.7)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p>Once I saw that the economic indicators were missing values, I decided that filling with the median would work best, as to not skew any calculations</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="do">##fill missing values with median</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">#select columns</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>columns_to_impute <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Foreign_direct_investment"</span>, </span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"agriculture_forestry_value_added"</span>, </span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"GNI.per.capita"</span>, </span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"net_barter_terms_of_trade_index"</span>, </span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"gdp_per_person_employed"</span>)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="co">#check for NAs in the economic indicators groups by Country</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>na_by_economy <span class="ot">&lt;-</span> clean_df <span class="sc">%&gt;%</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Economy, <span class="fu">all_of</span>(columns_to_impute)) <span class="sc">%&gt;%</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#group_by(Economy) %&gt;%</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.)), <span class="at">.names =</span> <span class="st">"NA_{col}"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">across</span>(<span class="fu">starts_with</span>(<span class="st">"NA_"</span>))))</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="co">#apply median calculation</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (col <span class="cf">in</span> columns_to_impute) {</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    clean_df[[col]][<span class="fu">is.na</span>(clean_df[[col]])] <span class="ot">&lt;-</span> <span class="fu">median</span>(clean_df[[col]], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="co">#verify missing values were filled</span></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>filled_summary <span class="ot">&lt;-</span> <span class="fu">colSums</span>(<span class="fu">is.na</span>(clean_df[columns_to_impute]))</span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>filled_summary</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       Foreign_direct_investment agriculture_forestry_value_added 
+                               0                                0 
+                  GNI.per.capita  net_barter_terms_of_trade_index 
+                               0                                0 
+         gdp_per_person_employed 
+                               0 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">#summary stats for marriage data</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>marriage_summary <span class="ot">&lt;-</span> clean_df <span class="sc">%&gt;%</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Region) <span class="sc">%&gt;%</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Mean_Marriage_Score =</span> <span class="fu">mean</span>(MARRIAGE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Median_Marriage_Score =</span> <span class="fu">median</span>(MARRIAGE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">SD_Marriage_Score =</span> <span class="fu">sd</span>(MARRIAGE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(marriage_summary)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 4
+  Region             Mean_Marriage_Score Median_Marriage_Score SD_Marriage_Score
+  &lt;chr&gt;                            &lt;dbl&gt;                 &lt;dbl&gt;             &lt;dbl&gt;
+1 East Asia &amp; Pacif…                86.4                   100             20.6 
+2 Europe &amp; Central …                95.7                   100              8.43
+3 High income: OECD                 95.3                   100             11.1 
+4 Latin America &amp; C…                90                     100             13.4 
+5 Middle East &amp; Nor…                24                      20             25.6 
+6 South Asia                        70                      70             26.2 
+7 Sub-Saharan Africa                65.4                    80             30.2 </code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>I performed some summary statistics of the marriage indicators. East Asia &amp; Pacific, Europe &amp; Central Asia, High Income, and Latin America &amp; Caribbean had significantly high marriage score statistics compared to Sub-Saharan Africa, South Asia and Middle East &amp; North Africa. It’s also important to note the standard deviations so that we are taking into account the actual spread of scores. For example, Although East Asia &amp; Pacific have a significantly high median, their mean is 14 points less and the standard deviation has a spread of 20 points. SUb-Saharan Africa is also a region to take note of with a spread of 30 points.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="do">##distribution of marriage scores</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co">#histogram</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(clean_df, <span class="fu">aes</span>(<span class="at">x =</span> MARRIAGE)) <span class="sc">+</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">20</span>, <span class="at">fill =</span> <span class="st">'blue'</span>, <span class="at">color =</span> <span class="st">'black'</span>) <span class="sc">+</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of Marriage Scores"</span>, </span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Marriage Score"</span>, </span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Frequency"</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">100</span>, <span class="at">by =</span> <span class="dv">20</span>)) <span class="sc">+</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co">#density plot</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(clean_df, <span class="fu">aes</span>(<span class="at">x =</span> MARRIAGE)) <span class="sc">+</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">fill =</span> <span class="st">'skyblue'</span>, <span class="at">alpha=</span><span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(MARRIAGE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="fu">median</span>(MARRIAGE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)), <span class="at">color =</span> <span class="st">"blue"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Density of Marriage Score"</span>, <span class="at">x =</span> <span class="st">"Marriage Score"</span>, <span class="at">y =</span> <span class="st">"Density"</span>) <span class="sc">+</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="fu">mean</span>(clean_df<span class="sc">$</span>MARRIAGE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">y =</span> <span class="fl">0.015</span>, <span class="at">label =</span> <span class="st">"Mean"</span>, <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="fu">median</span>(clean_df<span class="sc">$</span>MARRIAGE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">y =</span> <span class="fl">0.012</span>, <span class="at">label =</span> <span class="st">"Median"</span>, <span class="at">color =</span> <span class="st">"blue"</span>, <span class="at">angle =</span> <span class="dv">90</span>, <span class="at">vjust =</span> <span class="fl">1.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-9-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">mean</span>(clean_df_with<span class="sc">$</span>MARRIAGE))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 77.15789</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">median</span>(clean_df_with<span class="sc">$</span>MARRIAGE))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 80</code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>When we look at the distribution and density of the Marriage Scores, a significant portion of the scores lie within the range of 70 to 100. The mean score across all regions being 77.2 and the median being 80.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># look up table for region abbreviations</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>region_labels <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"East Asia &amp; Pacific"</span> <span class="ot">=</span> <span class="st">"EAP"</span>,</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Europe &amp; Central Asia"</span> <span class="ot">=</span> <span class="st">"ECA"</span>,</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"High income: OECD"</span> <span class="ot">=</span> <span class="st">"HIC"</span>,</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Latin America &amp; Caribbean"</span> <span class="ot">=</span> <span class="st">"LAC"</span>,</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Middle East &amp; North Africa"</span> <span class="ot">=</span> <span class="st">"MENA"</span>,</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"South Asia"</span> <span class="ot">=</span> <span class="st">"SA"</span>,</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Sub-Saharan Africa"</span> <span class="ot">=</span> <span class="st">"SSA"</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co">#compare marriage score across regions</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(clean_df, <span class="fu">aes</span>(<span class="at">x =</span> Region, <span class="at">y =</span> MARRIAGE, <span class="at">fill =</span> Region)) <span class="sc">+</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>(<span class="at">labels =</span> region_labels) <span class="sc">+</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span><span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Marriage Scores by Region"</span>, <span class="at">x =</span> <span class="st">"Region"</span>, <span class="at">y =</span> <span class="st">"Marriage Score"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>The High Income group has the highest marriage score, which is tightly clustered around 100 with no significant variability. This indicates consistent gender equality in marriage within the countries included in this group. Sub-Saharan Africa has the widest range of scores, with outlier as low as zero and scores spread from 25 to 100. This is indicative of significant variability in marriage laws within this region. Middle East &amp; North Africa’s score are generally low, with the median around 25 and some outliers. This suggests less gender equality in marriage-related laws in this region. South Asia’s scores are clustered between 50 and 100 with some variability which indicates mixed progress toward gender equality in marriage-related laws. East Asia &amp; Pacific and Europe &amp; Central Asia’s scores are consistently high, clustering around 100 - suggesting advanced gender equality in these regions’ marital laws. Latin America and Caribbean have a median score of about 75 which moderate variability. This indicates a mixed level of progress across this region as well.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co">#select marriage-related categorical columns</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>marriage_categorical <span class="ot">&lt;-</span> clean_df <span class="sc">%&gt;%</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Region,</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>         Is.the.law.free.of.legal.provisions.that.require.a.married.woman.to.obey.her.husband.,</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>         Can.a.woman.be.head.of.household.in.the.same.way.as.a.man.,</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>         Is.there.legislation.specifically.addressing.domestic.violence.,</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>         Can.a.woman.obtain.a.judgment.of.divorce.in.the.same.way.as.a.man.,</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>         Does.a.woman.have.the.same.rights.to.remarry.as.a.man.)</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="co">#convert long for visualization</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>marriage_long <span class="ot">&lt;-</span> marriage_categorical <span class="sc">%&gt;%</span></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>Region, <span class="at">names_to =</span> <span class="st">"Indicator"</span>, <span class="at">values_to =</span> <span class="st">"Response"</span>)</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a><span class="co">#calculate proportions</span></span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a>marriage_proportions <span class="ot">&lt;-</span> marriage_long <span class="sc">%&gt;%</span></span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Region, Indicator, Response) <span class="sc">%&gt;%</span></span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">Count =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Proportion =</span> Count <span class="sc">/</span> <span class="fu">sum</span>(Count))</span>
+<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(marriage_proportions)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 63 × 5
+   Region              Indicator                       Response Count Proportion
+   &lt;chr&gt;               &lt;chr&gt;                           &lt;chr&gt;    &lt;int&gt;      &lt;dbl&gt;
+ 1 East Asia &amp; Pacific Can.a.woman.be.head.of.househo… No           2    0.00211
+ 2 East Asia &amp; Pacific Can.a.woman.be.head.of.househo… Yes         23    0.0242 
+ 3 East Asia &amp; Pacific Can.a.woman.obtain.a.judgment.… No           4    0.00421
+ 4 East Asia &amp; Pacific Can.a.woman.obtain.a.judgment.… Yes         21    0.0221 
+ 5 East Asia &amp; Pacific Does.a.woman.have.the.same.rig… No           7    0.00737
+ 6 East Asia &amp; Pacific Does.a.woman.have.the.same.rig… Yes         18    0.0189 
+ 7 East Asia &amp; Pacific Is.the.law.free.of.legal.provi… No           2    0.00211
+ 8 East Asia &amp; Pacific Is.the.law.free.of.legal.provi… Yes         23    0.0242 
+ 9 East Asia &amp; Pacific Is.there.legislation.specifica… No           2    0.00211
+10 East Asia &amp; Pacific Is.there.legislation.specifica… Yes         23    0.0242 
+# ℹ 53 more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># look up table for marriage indicators</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>marriage_labels <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Is.the.law.free.of.legal.provisions.that.require.a.married.woman.to.obey.her.husband."</span> <span class="ot">=</span> <span class="st">"Obey Husband"</span>,</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Can.a.woman.be.head.of.household.in.the.same.way.as.a.man."</span> <span class="ot">=</span> <span class="st">"Head of Household"</span>,</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Is.there.legislation.specifically.addressing.domestic.violence."</span> <span class="ot">=</span> <span class="st">"Domestic Violence"</span>,</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Can.a.woman.obtain.a.judgment.of.divorce.in.the.same.way.as.a.man."</span> <span class="ot">=</span> <span class="st">"Judgment of Divorce"</span>,</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Does.a.woman.have.the.same.rights.to.remarry.as.a.man."</span> <span class="ot">=</span> <span class="st">"Remarriage Rights"</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(marriage_proportions<span class="sc">$</span>Indicator)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Can.a.woman.be.head.of.household.in.the.same.way.as.a.man."                           
+[2] "Can.a.woman.obtain.a.judgment.of.divorce.in.the.same.way.as.a.man."                   
+[3] "Does.a.woman.have.the.same.rights.to.remarry.as.a.man."                               
+[4] "Is.the.law.free.of.legal.provisions.that.require.a.married.woman.to.obey.her.husband."
+[5] "Is.there.legislation.specifically.addressing.domestic.violence."                      </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co">#visualize proportions</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(marriage_proportions, <span class="fu">aes</span>(<span class="at">x =</span> Region, <span class="at">y =</span> Proportion, <span class="at">fill =</span> Response)) <span class="sc">+</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>Indicator, <span class="at">scales =</span> <span class="st">"free"</span>, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">Indicator =</span> marriage_labels)) <span class="sc">+</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>(<span class="at">labels =</span> region_labels) <span class="sc">+</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span><span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Proportions of Yes/No Responses for Marriage Indicators By Region"</span>,</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Region"</span>, <span class="at">y =</span> <span class="st">"Proportion"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>Head of Household: Most regions have a high proportion of “yes” response, indicating that women can generally be the head of housefold in the same way as men. However, for Sub-Saharan Africa and Middle East &amp; North Africa, there are slighly lower proportions of “yes” responses, compared to the other regions, suggesting gender inequality in this area. Judgement of Divorce: High Income, Europe and Central Asia, and East Asia and Pacific have almost universal “yes” responses, indicating equitable divorce laws. Middle East &amp; North Africa has a significant proportion of “no” reponses. This suggests women face legal barrier in divorce. Remarriage Rights: Similar trends to Judgement of Divorces. Obey Husband: Middle East &amp; North Africa has a high proportion of ‘no’ responsesm which may indicate the existence of laws that require a married women to obey her husband while most other regions show “yes” responses, suggesting that such laws do not exist. Domestic Violence: High Income, Europe &amp; Central Asia, and East Asia &amp; Pacific show high yield of ‘yes’ responses, indicating legislation against domestic violence, which Middle East &amp; North Africa, Sub-Saharan Africa, and South Asia show high yield of ‘no’ reponses, indicating weaker, or non-existent legislation in these regions.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co">#scatter plot for marriage score vs gpd per person employed</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(clean_df, <span class="fu">aes</span>(<span class="at">x =</span> MARRIAGE, <span class="at">y =</span> gdp_per_person_employed)) <span class="sc">+</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Marriage Score vs GDP per Person Employed"</span>,</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Marriage Score"</span>, <span class="at">y =</span> <span class="st">"GDP per Person Employed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co">#scatter plot for marriage score vs gni per capita</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(clean_df, <span class="fu">aes</span>(<span class="at">x =</span> MARRIAGE, <span class="at">y =</span> GNI.per.capita)) <span class="sc">+</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Marriage Score vs GNI per Capita"</span>,</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Marriage Score"</span>, <span class="at">y =</span> <span class="st">"GNI per Capita"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-15-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>The scatterpkots depict the relationship between Marriage Score and GDP per Person Employed and GNI per Capita. Although the correlation line appears to slightly increase, looking at the points for the different regions, it is clear that there is much variability of marriage score when compared to GNI and GDP, shows by the spread of the points along the x-axis. This suggests that countries with similar GDP or GNI can have vastly different marriage scores, highlighting that economic outcomes alone may not fully explain differences in gender-related legal metrics. The minor slope of the libes and the spread of points suggest weak correlations. The marriage Score alone is not strongly predictive of either GDP per Person Employed or GNI per Capita, aligning with the earlier statistical findings.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># name vector for correlation matrix</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>variable_labels <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"WBL.INDEX"</span> <span class="ot">=</span> <span class="st">"WBL Index"</span>,</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"MOBILITY"</span> <span class="ot">=</span> <span class="st">"Mobility"</span>,</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"WORKPLACE"</span> <span class="ot">=</span> <span class="st">"Workplace"</span>,</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"PAY"</span> <span class="ot">=</span> <span class="st">"Pay"</span>,</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"MARRIAGE"</span> <span class="ot">=</span> <span class="st">"Marriage"</span>,</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ENTREPRENEURSHIP"</span> <span class="ot">=</span> <span class="st">"Entrepreneurship"</span>,</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"gdp_per_person_employed"</span> <span class="ot">=</span> <span class="st">"GDP per Person"</span>,</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"GNI.per.capita"</span> <span class="ot">=</span> <span class="st">"GNI per Capita"</span>,</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Foreign_direct_investment"</span> <span class="ot">=</span> <span class="st">"FDI"</span></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="do">## correlation analysis - relationship between inequality and economic indicators</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="co">#select relevant columns</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>cor_data <span class="ot">&lt;-</span> clean_df <span class="sc">%&gt;%</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(WBL.INDEX, MOBILITY, WORKPLACE, PAY, MARRIAGE, ENTREPRENEURSHIP, gdp_per_person_employed, GNI.per.capita, Foreign_direct_investment)</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="co">#compute correlation matrix</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>cor_matrix <span class="ot">&lt;-</span> <span class="fu">cor</span>(cor_data, <span class="at">use =</span> <span class="st">"complete.obs"</span>, <span class="at">method =</span> <span class="st">"pearson"</span>)</span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cor_matrix)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                           WBL.INDEX    MOBILITY  WORKPLACE        PAY
+WBL.INDEX                  1.0000000  0.72671357  0.7614641  0.6866873
+MOBILITY                   0.7267136  1.00000000  0.5308031  0.4067019
+WORKPLACE                  0.7614641  0.53080310  1.0000000  0.4339051
+PAY                        0.6866873  0.40670190  0.4339051  1.0000000
+MARRIAGE                   0.7659753  0.66780738  0.4850370  0.4349129
+ENTREPRENEURSHIP           0.5936419  0.32117967  0.4660193  0.3443164
+gdp_per_person_employed    0.3111684  0.06906631  0.1302605  0.2887511
+GNI.per.capita             0.3619318  0.11937723  0.1522016  0.3073131
+Foreign_direct_investment -0.1214479 -0.03787994 -0.0743453 -0.1107111
+                             MARRIAGE ENTREPRENEURSHIP gdp_per_person_employed
+WBL.INDEX                  0.76597529       0.59364187              0.31116840
+MOBILITY                   0.66780738       0.32117967              0.06906631
+WORKPLACE                  0.48503704       0.46601929              0.13026050
+PAY                        0.43491287       0.34431637              0.28875108
+MARRIAGE                   1.00000000       0.40534320              0.14387071
+ENTREPRENEURSHIP           0.40534320       1.00000000              0.27319187
+gdp_per_person_employed    0.14387071       0.27319187              1.00000000
+GNI.per.capita             0.21328263       0.27544016              0.87753524
+Foreign_direct_investment -0.03704272      -0.05472573             -0.33350651
+                          GNI.per.capita Foreign_direct_investment
+WBL.INDEX                      0.3619318               -0.12144788
+MOBILITY                       0.1193772               -0.03787994
+WORKPLACE                      0.1522016               -0.07434530
+PAY                            0.3073131               -0.11071109
+MARRIAGE                       0.2132826               -0.03704272
+ENTREPRENEURSHIP               0.2754402               -0.05472573
+gdp_per_person_employed        0.8775352               -0.33350651
+GNI.per.capita                 1.0000000               -0.28836678
+Foreign_direct_investment     -0.2883668                1.00000000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co">#update row and column names</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(cor_matrix) <span class="ot">&lt;-</span> variable_labels</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(cor_matrix) <span class="ot">&lt;-</span> variable_labels</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="co">#visualize correlation matrix</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(cor_matrix,</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="st">"Correlation Matrix"</span>,</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">method =</span> <span class="st">"circle"</span>,</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">type =</span> <span class="st">"upper"</span>,</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">tl.cex =</span> <span class="fl">0.8</span>,</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>the WBL Index has significant positive correlations with our selected variables. This suggests that as the overall WBL score increases, legal indicators in these areas also improve. (marriage shows a weaker correlation compared to other variables). GDP per Person Employed and GNI per Capita have weaker correlations with all variables including WBL Index. This emphasizes my previous findings that economic outcomes are not strongly tied to gender-related legal protections. FDI has low or negative correlations across the board. A strong cluster of positive correaltions exists among Mobility, Workplace, Pay, and Entrepreneurship, which suggests improvemtns in one area often accompany improvements in others.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(clean_df<span class="sc">$</span>WBL.INDEX)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  26.90   62.65   77.50   73.71   86.90  100.00 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>invalid_rows <span class="ot">&lt;-</span> clean_df[<span class="fu">is.na</span>(clean_df<span class="sc">$</span>WBL.INDEX) <span class="sc">&amp;</span> clean_df<span class="sc">$</span>WBL.INDEX <span class="sc">!=</span> <span class="st">"NA"</span>, ]</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(invalid_rows)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] Economy                                                                               
+ [2] Economy.Code                                                                          
+ [3] ISO.Code                                                                              
+ [4] Region                                                                                
+ [5] Income.Group                                                                          
+ [6] Report.Year                                                                           
+ [7] WBL.INDEX                                                                             
+ [8] MOBILITY                                                                              
+ [9] Can.a.woman.choose.where.to.live.in.the.same.way.as.a.man.                            
+[10] Can.a.woman.travel.outside.her.home.in.the.same.way.as.a.man.                         
+[11] Can.a.woman.apply.for.a.passport.in.the.same.way.as.a.man.                            
+[12] Can.a.woman.travel.outside.the.country.in.the.same.way.as.a.man.                      
+[13] WORKPLACE                                                                             
+[14] Can.a.woman.get.a.job.in.the.same.way.as.a.man.                                       
+[15] Does.the.law.prohibit.discrimination.in.employment.based.on.gender.                   
+[16] Is.there.legislation.on.sexual.harassment.in.employment.                              
+[17] Are.there.criminal.penalties.or.civil.remedies.for.sexual.harassment.in.employment.   
+[18] PAY                                                                                   
+[19] Does.the.law.mandate.equal.remuneration.for.work.of.equal.value.                      
+[20] Can.a.woman.work.at.night.in.the.same.way.as.a.man.                                   
+[21] Can.a.woman.work.in.a.job.deemed.dangerous.in.the.same.way.as.a.man.                  
+[22] Can.a.woman.work.in.an.industrial.job.in.the.same.way.as.a.man.                       
+[23] MARRIAGE                                                                              
+[24] Is.the.law.free.of.legal.provisions.that.require.a.married.woman.to.obey.her.husband. 
+[25] Can.a.woman.be.head.of.household.in.the.same.way.as.a.man.                            
+[26] Is.there.legislation.specifically.addressing.domestic.violence.                       
+[27] Can.a.woman.obtain.a.judgment.of.divorce.in.the.same.way.as.a.man.                    
+[28] Does.a.woman.have.the.same.rights.to.remarry.as.a.man.                                
+[29] PARENTHOOD                                                                            
+[30] Is.paid.leave.of.at.least.14.weeks.available.to.mothers.                              
+[31] Length.of.paid.maternity.leave                                                        
+[32] Does.the.government.administer.100.percent.of.maternity.leave.benefits.               
+[33] Is.there.paid.leave.available.to.fathers.                                             
+[34] Length.of.paid.paternity.leave                                                        
+[35] Is.there.paid.parental.leave.                                                         
+[36] Shared.days                                                                           
+[37] Days.for.the.mother                                                                   
+[38] Days.for.the.father                                                                   
+[39] Is.dismissal.of.pregnant.workers.prohibited.                                          
+[40] ENTREPRENEURSHIP                                                                      
+[41] Does.the.law.prohibit.discrimination.in.access.to.credit.based.on.gender.             
+[42] Can.a.woman.sign.a.contract.in.the.same.way.as.a.man.                                 
+[43] Can.a.woman.register.a.business.in.the.same.way.as.a.man.                             
+[44] Can.a.woman.open.a.bank.account.in.the.same.way.as.a.man.                             
+[45] ASSETS                                                                                
+[46] Do.women.and.men.have.equal.ownership.rights.to.immovable.property.                   
+[47] Do.sons.and.daughters.have.equal.rights.to.inherit.assets.from.their.parents.         
+[48] Do.male.and.female.surviving.spouses.have.equal.rights.to.inherit.assets.             
+[49] Does.the.law.grant.spouses.equal.administrative.authority.over.assets.during.marriage.
+[50] Does.the.law.provide.for.the.valuation.of.nonmonetary.contributions.                  
+[51] PENSION                                                                               
+[52] Is.the.age.at.which.women.and.men.can.retire.with.full.pension.benefits.the.same.     
+[53] Is.the.age.at.which.women.and.men.can.retire.with.partial.pension.benefits.the.same.  
+[54] Is.the.mandatory.retirement.age.for.women.and.men.the.same.                           
+[55] Are.periods.of.absence.due.to.childcare.accounted.for.in.pension.benefits.            
+[56] match                                                                                 
+[57] X                                                                                     
+[58] Country.Code                                                                          
+[59] Foreign_direct_investment                                                             
+[60] agriculture_forestry_value_added                                                      
+[61] GNI.per.capita                                                                        
+[62] net_barter_terms_of_trade_index                                                       
+[63] gdp_per_person_employed                                                               
+&lt;0 rows&gt; (or 0-length row.names)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co">#convert WBL.INDEX from character to numeric</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>clean_df<span class="sc">$</span>WBL.INDEX <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(clean_df<span class="sc">$</span>WBL.INDEX))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="do">## t-test for group comparisons</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="co">#group based on median index score</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>clean_df_with<span class="sc">$</span>WBL_Group <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(clean_df_with<span class="sc">$</span>WBL.INDEX <span class="sc">&gt;=</span> <span class="fu">median</span>(clean_df_with<span class="sc">$</span>WBL.INDEX, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="st">"High"</span>, <span class="st">"Low"</span>)</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>clean_df_with<span class="sc">$</span>WBL_Group <span class="ot">&lt;-</span> <span class="fu">factor</span>(clean_df_with<span class="sc">$</span>WBL_Group)</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(clean_df_with<span class="sc">$</span>WBL_Group)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] Low  High
+Levels: High Low</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(clean_df_with<span class="sc">$</span>WBL_Group)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+High  Low 
+  96   94 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>clean_df_without<span class="sc">$</span>WBL_Group <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(clean_df_without<span class="sc">$</span>WBL.INDEX <span class="sc">&gt;=</span> <span class="fu">median</span>(clean_df_without<span class="sc">$</span>WBL.INDEX, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="st">"High"</span>, <span class="st">"Low"</span>)</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>clean_df_without<span class="sc">$</span>WBL_Group <span class="ot">&lt;-</span> <span class="fu">factor</span>(clean_df_without<span class="sc">$</span>WBL_Group)</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(clean_df_without<span class="sc">$</span>WBL_Group)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] Low  High
+Levels: High Low</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(clean_df_without<span class="sc">$</span>WBL_Group)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+High  Low 
+  78   78 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co">#t test for gdp by wbl group with high income group</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>t_test_gdp_with <span class="ot">&lt;-</span> <span class="fu">t.test</span>(</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>  gdp_per_person_employed <span class="sc">~</span> WBL_Group,</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> clean_df_with</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"T-test for GDP by WBL Group with High Income Included:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "T-test for GDP by WBL Group with High Income Included:"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t_test_gdp_with)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Welch Two Sample t-test
+
+data:  gdp_per_person_employed by WBL_Group
+t = 5.1815, df = 156.75, p-value = 6.686e-07
+alternative hypothesis: true difference in means between group High and group Low is not equal to 0
+95 percent confidence interval:
+ 19511.26 43550.91
+sample estimates:
+mean in group High  mean in group Low 
+          67894.62           36363.53 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co">#t test for gni by wbl group</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>t_test_gni_with <span class="ot">&lt;-</span> <span class="fu">t.test</span>(</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>  GNI.per.capita <span class="sc">~</span> WBL_Group,</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> clean_df_with</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"T-test for GNI by WBL Group with High Income Included:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "T-test for GNI by WBL Group with High Income Included:"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t_test_gni_with)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Welch Two Sample t-test
+
+data:  GNI.per.capita by WBL_Group
+t = 5.7264, df = 130.06, p-value = 6.757e-08
+alternative hypothesis: true difference in means between group High and group Low is not equal to 0
+95 percent confidence interval:
+  9032.025 18567.000
+sample estimates:
+mean in group High  mean in group Low 
+         20397.917           6598.404 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co">#t test for gdp by wbl group without high income group</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>t_test_gdp_without <span class="ot">&lt;-</span> <span class="fu">t.test</span>(</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>  gdp_per_person_employed <span class="sc">~</span> WBL_Group,</span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> clean_df_without</span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"T-test for GDP by WBL Group with High Income Included:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "T-test for GDP by WBL Group with High Income Included:"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t_test_gdp_without)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Welch Two Sample t-test
+
+data:  gdp_per_person_employed by WBL_Group
+t = 0.31715, df = 153.98, p-value = 0.7516
+alternative hypothesis: true difference in means between group High and group Low is not equal to 0
+95 percent confidence interval:
+ -8631.71 11933.24
+sample estimates:
+mean in group High  mean in group Low 
+          39518.34           37867.57 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co">#t test for gni by wbl group</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>t_test_gni_without <span class="ot">&lt;-</span> <span class="fu">t.test</span>(</span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>  GNI.per.capita <span class="sc">~</span> WBL_Group,</span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> clean_df_without</span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"T-test for GNI by WBL Group with High Income Included: "</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "T-test for GNI by WBL Group with High Income Included: "</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t_test_gni_without)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Welch Two Sample t-test
+
+data:  GNI.per.capita by WBL_Group
+t = 0.78148, df = 153.73, p-value = 0.4357
+alternative hypothesis: true difference in means between group High and group Low is not equal to 0
+95 percent confidence interval:
+ -1959.829  4525.213
+sample estimates:
+mean in group High  mean in group Low 
+          8176.795           6894.103 </code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>To create the WBL Groups, I calculated the median, then the countries with below the median were classified as “Low” and the countries above the median were classified as “High”. In the t-test including the High Income group, there is a statistically significant difference in GDP per Person Employed and GNI per capita between the High and Low WBL groups. However, when we excluded the High Income group, there was no significant difference in GDP per Person Employer or GNI per Capita between the High and Low WBL groups. This indicates that the High Income group is driving the observed differences, which may suggest High Income nations disproportionarely influence global trends.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="do">##chi-square test</span></span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a><span class="co">#create contingency table and run test</span></span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a><span class="co">#with high income</span></span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a>chi_table_with <span class="ot">&lt;-</span> <span class="fu">table</span>(clean_df_with<span class="sc">$</span>WBL_Group, clean_df_with<span class="sc">$</span>Region)</span>
+<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a>chi_test_with <span class="ot">&lt;-</span> <span class="fu">chisq.test</span>(chi_table_with)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in chisq.test(chi_table_with): Chi-squared approximation may be
+incorrect</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="co">#without high income</span></span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>chi_table_without <span class="ot">&lt;-</span> <span class="fu">table</span>(clean_df_without<span class="sc">$</span>WBL_Group, clean_df_without<span class="sc">$</span>Region)</span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>chi_test_without <span class="ot">&lt;-</span> <span class="fu">chisq.test</span>(chi_table_without)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in chisq.test(chi_table_without): Chi-squared approximation may be
+incorrect</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="co">#results</span></span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"Chi-square Test with High Income Group Included:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Chi-square Test with High Income Group Included:"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(chi_test_with)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Pearson's Chi-squared test
+
+data:  chi_table_with
+X-squared = 74.021, df = 6, p-value = 6.103e-14</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"Chi_square Test without High Income Group Excluded:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Chi_square Test without High Income Group Excluded:"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(chi_test_without)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Pearson's Chi-squared test
+
+data:  chi_table_without
+X-squared = 39.459, df = 5, p-value = 1.92e-07</code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>Both tests have extremely small p-values, indicating strong evidence to reject the null hypothesis. The inclusion of the High Income group has a significant impact on the test statistic and degrees of freedom. Within the test with the High Income group included, he chi-squared statistic is much higher. This is likely due to the disproportionate representation of countries with high WBL scores in that group, adding more variability to the analysis as a whole. Without the High Income group, the association remains significant but the test statistic is smaller. This could indicate that removing the High Income group results in fewer extreme differences between observed and expected values. It is important to note that the warning suggests that some frequencies might be too small to trust the approximation fully, which is why I also used the Monte Carlo simulation.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="do">##visualize the contingency table</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a><span class="co">#convert table to data frame</span></span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>chi_df_with <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(chi_table_with)</span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(chi_df_with) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"WBL_Group"</span>, <span class="st">"Region"</span>, <span class="st">"Count"</span>)</span>
+<span id="cb94-5"><a href="#cb94-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb94-6"><a href="#cb94-6" aria-hidden="true" tabindex="-1"></a>chi_df_without <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(chi_table_without)</span>
+<span id="cb94-7"><a href="#cb94-7" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(chi_df_without) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"WBL_Group"</span>, <span class="st">"Region"</span>, <span class="st">"Count"</span>)</span>
+<span id="cb94-8"><a href="#cb94-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb94-9"><a href="#cb94-9" aria-hidden="true" tabindex="-1"></a><span class="co">#bar plot</span></span>
+<span id="cb94-10"><a href="#cb94-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(chi_df_with, <span class="fu">aes</span>(<span class="at">x =</span> Region, <span class="at">y =</span> Count, <span class="at">fill =</span> WBL_Group)) <span class="sc">+</span></span>
+<span id="cb94-11"><a href="#cb94-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb94-12"><a href="#cb94-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of WBL Groups by Region"</span>, <span class="at">x =</span> <span class="st">"Region"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
+<span id="cb94-13"><a href="#cb94-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>(<span class="at">labels =</span> region_labels) <span class="sc">+</span></span>
+<span id="cb94-14"><a href="#cb94-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(chi_df_without, <span class="fu">aes</span>(<span class="at">x =</span> Region, <span class="at">y =</span> Count, <span class="at">fill =</span> WBL_Group)) <span class="sc">+</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>, <span class="at">position =</span> <span class="st">"dodge"</span>) <span class="sc">+</span></span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of WBL Groups by Region"</span>, <span class="at">x =</span> <span class="st">"Region"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span></span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>(<span class="at">labels =</span> region_labels) <span class="sc">+</span></span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-23-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="do">## permutation test</span></span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a><span class="co">#observed difference in gdp means with high income</span></span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>observed_diff_with <span class="ot">&lt;-</span> <span class="fu">mean</span>(clean_df_with<span class="sc">$</span>gdp_per_person_employed[clean_df_with<span class="sc">$</span>WBL_Group <span class="sc">==</span><span class="st">"High"</span>], <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">-</span></span>
+<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(clean_df_with<span class="sc">$</span>gdp_per_person_employed[clean_df_with<span class="sc">$</span>WBL_Group <span class="sc">==</span> <span class="st">"Low"</span>], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a><span class="co">#permutation test</span></span>
+<span id="cb96-7"><a href="#cb96-7" aria-hidden="true" tabindex="-1"></a>perm_diff_with <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">10000</span>, {</span>
+<span id="cb96-8"><a href="#cb96-8" aria-hidden="true" tabindex="-1"></a>  permuted_with <span class="ot">&lt;-</span> <span class="fu">sample</span>(clean_df_with<span class="sc">$</span>WBL_Group)</span>
+<span id="cb96-9"><a href="#cb96-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(clean_df_with<span class="sc">$</span>gdp_per_person_employed[permuted_with <span class="sc">==</span> <span class="st">"High"</span>], <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">-</span></span>
+<span id="cb96-10"><a href="#cb96-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mean</span>(clean_df_with<span class="sc">$</span>gdp_per_person_employed[permuted_with <span class="sc">==</span> <span class="st">"Low"</span>], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb96-11"><a href="#cb96-11" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb96-12"><a href="#cb96-12" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"Permutation Test Results including High Income Group:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Permutation Test Results including High Income Group:"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="co">#calculate p value</span></span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>p_value_with <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">abs</span>(perm_diff_with) <span class="sc">&gt;=</span> <span class="fu">abs</span>(observed_diff_with))</span>
+<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_value_with)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="co">#print observed difference</span></span>
+<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Observed difference: "</span>, observed_diff_with)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Observed difference:  31531.09</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="do">##########################################</span></span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a><span class="co">#observed difference in gdp means</span></span>
+<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a>observed_diff_without <span class="ot">&lt;-</span> <span class="fu">mean</span>(clean_df_without<span class="sc">$</span>gdp_per_person_employed[clean_df_without<span class="sc">$</span>WBL_Group <span class="sc">==</span><span class="st">"High"</span>], <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">-</span></span>
+<span id="cb102-5"><a href="#cb102-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(clean_df_without<span class="sc">$</span>gdp_per_person_employed[clean_df_without<span class="sc">$</span>WBL_Group <span class="sc">==</span> <span class="st">"Low"</span>], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb102-6"><a href="#cb102-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb102-7"><a href="#cb102-7" aria-hidden="true" tabindex="-1"></a><span class="co">#permutation test</span></span>
+<span id="cb102-8"><a href="#cb102-8" aria-hidden="true" tabindex="-1"></a>perm_diff_without <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">10000</span>, {</span>
+<span id="cb102-9"><a href="#cb102-9" aria-hidden="true" tabindex="-1"></a>  permuted_without <span class="ot">&lt;-</span> <span class="fu">sample</span>(clean_df_without<span class="sc">$</span>WBL_Group)</span>
+<span id="cb102-10"><a href="#cb102-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(clean_df_without<span class="sc">$</span>gdp_per_person_employed[permuted_without <span class="sc">==</span> <span class="st">"High"</span>], <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">-</span></span>
+<span id="cb102-11"><a href="#cb102-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mean</span>(clean_df_without<span class="sc">$</span>gdp_per_person_employed[permuted_without <span class="sc">==</span> <span class="st">"Low"</span>], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb102-12"><a href="#cb102-12" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb102-13"><a href="#cb102-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb102-14"><a href="#cb102-14" aria-hidden="true" tabindex="-1"></a><span class="co">#calculate p value</span></span>
+<span id="cb102-15"><a href="#cb102-15" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">""</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] ""</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"Permutation Results Excluding High Income Group:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Permutation Results Excluding High Income Group:"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>p_value_without <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">abs</span>(perm_diff_without) <span class="sc">&gt;=</span> <span class="fu">abs</span>(observed_diff_without))</span>
+<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_value_without)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7584</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="co">#print observed difference</span></span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Observed difference: "</span>, observed_diff_without)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Observed difference:  1650.767</code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>The p-value for the test including the High Income Group indicates that none of the permutations produced a difference as extreme as the observed difference. This suggests that there is a significant relationship between the WBL group and the GDP when the High Income group is included. Also, the large observed difference further supports this results by highlighting that countries in the “High” WBL group have substantially higher GDP per person employed compared to those in the “Low” group. On the other hand, the p-value for test exluding the High Income group indicates no significant relationship between the WBL group and GDP. The observed difference of 1,650.767 is relatively low, which suggests that the distinction between “High” and “Low” WBL groups in terms of GDP becomes insignificant once the High Income countries are removed.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="do">## monte carlo simulation</span></span>
+<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a><span class="co">#function to simulation gdp based on wbl index</span></span>
+<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>simulation_gdp <span class="ot">&lt;-</span> <span class="cf">function</span>(data, n_sim) {</span>
+<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>  results <span class="ot">&lt;-</span> <span class="fu">replicate</span>(n_sim, {</span>
+<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">#sample wbl index values with replacement</span></span>
+<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>    sampled_index <span class="ot">&lt;-</span> <span class="fu">sample</span>(data<span class="sc">$</span>WBL.INDEX, <span class="at">size =</span> <span class="fu">nrow</span>(data), <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb110-8"><a href="#cb110-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">#simulate gdp (linear model with noise)</span></span>
+<span id="cb110-9"><a href="#cb110-9" aria-hidden="true" tabindex="-1"></a>    simulated_gdp <span class="ot">&lt;-</span> <span class="dv">500</span> <span class="sc">*</span> sampled_index <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="fu">nrow</span>(data), <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10000</span>)</span>
+<span id="cb110-10"><a href="#cb110-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mean</span>(simulated_gdp) <span class="co">#return mean gdp for simulation</span></span>
+<span id="cb110-11"><a href="#cb110-11" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb110-12"><a href="#cb110-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(results)</span>
+<span id="cb110-13"><a href="#cb110-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb110-14"><a href="#cb110-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb110-15"><a href="#cb110-15" aria-hidden="true" tabindex="-1"></a><span class="co">#simulate for both datasets</span></span>
+<span id="cb110-16"><a href="#cb110-16" aria-hidden="true" tabindex="-1"></a>gdp_with <span class="ot">&lt;-</span> <span class="fu">simulation_gdp</span>(clean_df_with, <span class="dv">10000</span>)</span>
+<span id="cb110-17"><a href="#cb110-17" aria-hidden="true" tabindex="-1"></a>gdp_without <span class="ot">&lt;-</span> <span class="fu">simulation_gdp</span>(clean_df_without, <span class="dv">10000</span>)</span>
+<span id="cb110-18"><a href="#cb110-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb110-19"><a href="#cb110-19" aria-hidden="true" tabindex="-1"></a><span class="co">#summarize results</span></span>
+<span id="cb110-20"><a href="#cb110-20" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"Monte Carlo Including High Income Group:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Monte Carlo Including High Income Group:"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gdp_with)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  32830   36189   36868   36860   37535   40152 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="st">"Monte Carlo Excluding High Income Group:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Monte Carlo Excluding High Income Group:"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gdp_without)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  30859   33929   34628   34628   35340   38670 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb118"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="do">##visualize to compare monte carlo results</span></span>
+<span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a><span class="co">#combine results into df</span></span>
+<span id="cb118-3"><a href="#cb118-3" aria-hidden="true" tabindex="-1"></a>simulation_results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb118-4"><a href="#cb118-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">GDP =</span> <span class="fu">c</span>(gdp_with, gdp_without),</span>
+<span id="cb118-5"><a href="#cb118-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dataset =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"With High Income"</span>, <span class="st">"Without High Income"</span>), <span class="at">each =</span> <span class="dv">10000</span>)</span>
+<span id="cb118-6"><a href="#cb118-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb118-7"><a href="#cb118-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-8"><a href="#cb118-8" aria-hidden="true" tabindex="-1"></a><span class="co">#density plot</span></span>
+<span id="cb118-9"><a href="#cb118-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(simulation_results, <span class="fu">aes</span>(<span class="at">x =</span> GDP, <span class="at">fill =</span> Dataset)) <span class="sc">+</span></span>
+<span id="cb118-10"><a href="#cb118-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb118-11"><a href="#cb118-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Simulated GDP Distributions"</span>, <span class="at">x =</span> <span class="st">"GDP"</span>, <span class="at">y =</span> <span class="st">"Density"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>the distribution including the High Income group has a higher central tendency (median and mean) compared to the dataset without the High Income group. Even thought the quartiles of the two distributions do not drastically differ, the inclusion of the high income group result in statistical significance, likely due to the overall higher GDP values and their concentration in the “High” WBL group. This inflates the observed difference in means between the groups.</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="do">## scatter plot with regression line to show lack of correlation between GDP and WBL Score</span></span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(clean_df_with, <span class="fu">aes</span>(<span class="at">x =</span> WBL.INDEX, <span class="at">y =</span> gdp_per_person_employed)) <span class="sc">+</span></span>
+<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb119-4"><a href="#cb119-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">color =</span> <span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb119-5"><a href="#cb119-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb119-6"><a href="#cb119-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Relationship Between WBL Score and GDP (With High Income)"</span>,</span>
+<span id="cb119-7"><a href="#cb119-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"WBL Score"</span>,</span>
+<span id="cb119-8"><a href="#cb119-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"GDP per Person Employed"</span></span>
+<span id="cb119-9"><a href="#cb119-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb119-10"><a href="#cb119-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(clean_df_without, <span class="fu">aes</span>(<span class="at">x =</span> WBL.INDEX, <span class="at">y =</span> gdp_per_person_employed)) <span class="sc">+</span></span>
+<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">color =</span> <span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb121-4"><a href="#cb121-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb121-5"><a href="#cb121-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Relationship Between WBL Score and GDP (With High Income)"</span>,</span>
+<span id="cb121-6"><a href="#cb121-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"WBL Score"</span>,</span>
+<span id="cb121-7"><a href="#cb121-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"GDP per Person Employed"</span></span>
+<span id="cb121-8"><a href="#cb121-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb121-9"><a href="#cb121-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hypothesis_testing_files/figure-html/unnamed-chunk-27-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>While a higher WBL score may correlate slightly with higher GDP, outliers (high income group) are what is significantly driving the relationship - which is made evident by the shallow slope in the regression line. Variability suggests that cultural, political, and historical factors may play a more significant role in predicting economic success.</p>
+</blockquote>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

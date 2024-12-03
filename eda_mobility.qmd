@@ -8,13 +8,134 @@ format:
 ```{r}
 library(ggplot2)
 library(plotly)
+library(tidyverse)
 
 df <- read.csv('data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv')
 ```
 
-```{r}
 
-cat('Can a woman choose where to live in the same way as a man?\n',table(df$Can.a.woman.choose.where.to.live.in.the.same.way.as.a.man.), '\n Yes No')
+```{r}
+# look up table for region abbreviations
+region_labels <- c(
+    "East Asia & Pacific" = "EAP",
+    "Europe & Central Asia" = "ECA",
+    "High income: OECD" = "HIC",
+    "Latin America & Caribbean" = "LAC",
+    "Middle East & North Africa" = "MENA",
+    "South Asia" = "SA",
+    "Sub-Saharan Africa" = "SSA"
+)
+# summary stats for gdp data
+gdp_summary <- df %>%
+    group_by(Region) %>%
+    summarise(
+        Mean_GDP_Score = mean(gdp_per_person_employed, na.rm = TRUE),
+        Median_GDP_Score = median(gdp_per_person_employed, na.rm = TRUE),
+        SD_GDP_Score = sd(gdp_per_person_employed, na.rm = TRUE)
+    )
+
+gdp_summary
+
+
+
+# summary stats for mobility data
+mobility_summary <- df %>%
+    group_by(Region) %>%
+    summarise(
+        Mean_Mobility_Score = mean(MOBILITY, na.rm = TRUE),
+        Median_Mobility_Score = median(MOBILITY, na.rm = TRUE),
+        SD_Mobility_Score = sd(MOBILITY, na.rm = TRUE)
+    )
+
+mobility_summary
+
+```
+
+ 
+```{r}
+## distribution of gdp scores
+# histogram
+ggplot(df, aes(x = gdp_per_person_employed, fill = Region)) +
+    geom_histogram(binwidth = 50000) +
+    theme_minimal() +
+    labs(
+        title = "Distribution of GDP by Region",
+        x = "GDP",
+        y = "Frequency"
+    ) +
+    scale_x_continuous(breaks = seq(0, 10000000, by = 50000)) +
+    theme_minimal()
+
+```
+
+
+
+```{r}
+## distribution of mobility scores
+# histogram
+mobility_p <- ggplot(df, aes(x = MOBILITY, fill= Region)) +
+    geom_histogram(binwidth = 20) +
+    theme_minimal() +
+    labs(
+        title = "Distribution of Mobility Scores",
+        x = "Mobility Score",
+        y = "Frequency"
+    ) +
+    scale_x_continuous(breaks = seq(0, 100, by = 20)) +
+    theme_minimal()
+
+ggplotly(mobility_p)
+```
+
+
+```{r}
+# compare mobility score across regions
+ggplot(df, aes(x = Region, y = MOBILITY, fill = Region)) +
+    geom_boxplot() +
+    scale_x_discrete(labels = region_labels) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Mobility Scores by Region", x = "Region", y = "Mobility Score")
+```
+
+
+
+
+```{r}
+# select mobility-related categorical columns
+mobility_categorical <- df %>%
+    select(Region, Can.a.woman.choose.where.to.live.in.the.same.way.as.a.man., Can.a.woman.travel.outside.her.home.in.the.same.way.as.a.man., Can.a.woman.apply.for.a.passport.in.the.same.way.as.a.man., Can.a.woman.travel.outside.the.country.in.the.same.way.as.a.man.)
+
+# convert long for visualization
+mobility_long <- mobility_categorical %>%
+    pivot_longer(cols = -Region, names_to = "Indicator", values_to = "Response")
+
+# calculate proportions
+mobility_proportions <- mobility_long %>%
+    group_by(Region, Indicator, Response) %>%
+    summarise(Count = n(), .groups = "drop") %>%
+    mutate(Proportion = Count / sum(Count))
+
+mobility_proportions
+```
+
+
+```{r}
+# look up table for mobility indicators
+mobility_labels <- c(
+    "Can.a.woman.choose.where.to.live.in.the.same.way.as.a.man." = "Choice of Living Situation", "Can.a.woman.travel.outside.her.home.in.the.same.way.as.a.man." = "Travel Outside Home", "Can.a.woman.apply.for.a.passport.in.the.same.way.as.a.man." = "Passport Acquisition", "Can.a.woman.travel.outside.the.country.in.the.same.way.as.a.man." = "Intercontinental Travel"
+)
+
+# visualize proportions
+
+ggplot(mobility_proportions, aes(x = Region, y = Proportion, fill = Response)) +
+    geom_bar(stat = "identity", position = "fill") +
+    facet_wrap(~Indicator, scales = "free", labeller = labeller(Indicator = mobility_labels)) +
+    scale_x_discrete(labels = region_labels) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(
+        title = "Proportions of Yes/No Responses for Mobility Indicators By Region",
+        x = "Region", y = "Proportion"
+    )
 ```
 
 
@@ -58,16 +179,6 @@ ggplotly(mob_plt_4)
 
 
 ```{r}
-mobility_p <- ggplot(df, aes(x = MOBILITY, fill = Region)) +
-    geom_bar(position = "dodge") + # 'dodge' puts bars side by side
-    labs(title = "Mobility Score (out of 100) by Region", x = "Mobility", y = "Count") +
-    theme_minimal()
-
-ggplotly(mobility_p)
-```
-
-
-```{r}
 # Welch Two Sample t-test
 t_test_result <- t.test(MOBILITY ~ Can.a.woman.choose.where.to.live.in.the.same.way.as.a.man., data = df)
 
@@ -98,4 +209,34 @@ t_test_result <- t.test(MOBILITY ~ Can.a.woman.travel.outside.the.country.in.the
 
 print(t_test_result)
 
+```
+
+
+```{r}
+# scatter plot for Mobility score vs gpd per person employed
+reg_mob <- ggplot(df, aes(x = MOBILITY, y = gdp_per_person_employed)) +
+    geom_point() +
+    geom_smooth(method = "lm", color = "red") +
+    theme_minimal() +
+    labs(
+        title = "Mobility Score vs GDP per Person Employed",
+        x = "Mobility Score", y = "GDP per Person Employed"
+    )
+ggplotly(reg_mob)
+
+```
+
+```{r}
+# density plot
+ggplot(df, aes(x = MOBILITY)) +
+    geom_density(fill = "skyblue", alpha = 0.5, color = "black") +
+    geom_vline(aes(xintercept = mean(MOBILITY, na.rm = TRUE)), color = "red", linetype = "dashed", linewidth = 1) +
+    geom_vline(aes(xintercept = median(MOBILITY, na.rm = TRUE)), color = "blue", linetype = "dashed", linewidth = 1) +
+    theme_minimal() +
+    labs(title = "Density of Mobility Score", x = "Mobility Score", y = "Density") +
+    annotate("text", x = mean(df$MOBILITY, na.rm = TRUE), y = 0.015, label = "Mean", color = "red", angle = 90, vjust = 1.5) +
+    annotate("text", x = median(df$MOBILITY, na.rm = TRUE), y = 0.012, label = "Median", color = "blue", angle = 90, vjust = 1.5)
+
+print(mean(df$MOBILITY))
+print(median(df$MOBILITY))
 ```
