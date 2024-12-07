@@ -143,3 +143,396 @@ ggplot(pay_data_long , aes(x = PAY, y = pay_value)) +
     plot.title = element_text(hjust = 0.5, face = "bold", size = 16)
   )
 ```
+
+```{r}
+ggplot(df, aes(x = PAY)) +
+    geom_histogram(binwidth = 20, fill = 'skyblue', color = 'black') +
+    theme_minimal() +
+    labs(title = "Distribution of Pay Scores", 
+         x = "Pay Score", 
+         y = "Frequency"
+    ) +
+    scale_x_continuous(breaks = seq(0, 100, by = 20)) +
+    theme(
+        plot.title = element_text(size = 20, face = "bold"),
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16),
+        axis.text = element_text(size = 14)
+    ) 
+
+ggsave("pay_barplot.png")
+
+
+
+ggplot(df, aes(x = PAY)) +
+    geom_histogram(binwidth = 20, fill = 'skyblue', color = 'black') +
+    stat_bin(binwidth = 20, geom = "text", aes(label = ..count..), vjust = -0.5) +
+    labs(title = "Distribution of Pay Scores for All Countries", 
+       x = "Pay Score", 
+       y = "Count"
+    ) +
+    theme(plot.title = element_text(hjust=0.5)) +
+    scale_x_continuous(breaks = seq(0, 100, by = 20))
+
+ggsave("pay_barplot2.png")
+```
+
+```{r}
+region_labels <- c(
+  "East Asia & Pacific" = "EAP",
+  "Europe & Central Asia" = "ECA",
+  "High income: OECD" = "HIC",
+  "Latin America & Caribbean" = "LAC",
+  "Middle East & North Africa" = "MENA",
+  "South Asia" = "SA",
+  "Sub-Saharan Africa" = "SSA"
+)
+```
+
+```{r}
+#compare pay score across regions
+ggplot(df, aes(x = Region, y = PAY, fill = Region)) +
+  geom_boxplot() +
+  scale_x_discrete(labels = region_labels) +
+  theme(axis.text.x = element_text(angle = 45, hjust =1),
+    plot.title = element_text(hjust=0.5, face = "bold")) +
+  labs(title = "Pay Scores by Region", x = "Region", y = "Pay Score")
+
+
+ggsave("pay_boxplot.png")
+```
+
+```{r}
+pay_categorical <- df %>%
+  select(Region,
+         Does.the.law.mandate.equal.remuneration.for.work.of.equal.value.,
+         Can.a.woman.work.at.night.in.the.same.way.as.a.man.,
+         Can.a.woman.work.in.a.job.deemed.dangerous.in.the.same.way.as.a.man.,
+         Can.a.woman.work.in.an.industrial.job.in.the.same.way.as.a.man.)
+
+#convert long for visualization
+pay_long <- pay_categorical %>%
+  pivot_longer(cols = -Region, names_to = "Indicator", values_to = "Response")
+
+#calculate proportions
+pay_proportions <- pay_long %>%
+  group_by(Region, Indicator, Response) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  mutate(Proportion = Count / sum(Count))
+
+print(pay_proportions)
+
+```
+
+```{r}
+
+pay_labels <- c(
+  "Does.the.law.mandate.equal.remuneration.for.work.of.equal.value." = "Equal Pay",
+  "Can.a.woman.work.at.night.in.the.same.way.as.a.man." = "Work at Night",
+  "Can.a.woman.work.in.a.job.deemed.dangerous.in.the.same.way.as.a.man." = "Dangerous Job",
+  "Can.a.woman.work.in.an.industrial.job.in.the.same.way.as.a.man." = "Industrial Job"
+)
+
+unique(pay_proportions$Indicator)
+```
+
+```{r}
+#visualize proportions
+ggplot(pay_proportions, aes(x = Region, y = Proportion, fill = Response)) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(~Indicator, scales = "free", labeller = labeller(Indicator = pay_labels)) +
+  scale_x_discrete(labels = region_labels) +
+  theme(axis.text.x = element_text(angle = 45, hjust =1),
+    plot.title = element_text(hjust=0.5, face = "bold")) +
+  labs(title = "Proportions of Yes/No Responses for Pay Indicators By Region",
+       x = "Region", y = "Proportion")
+
+ggsave("pay_proportions.png")
+```
+
+```{r}
+# Calculate median WBL score by Income Group
+income_group_median_wbl <- df %>%
+    filter(Income.Group != "Not classified") %>%
+    group_by(Income.Group) %>%
+    summarise(median_wbl = median(WBL.INDEX, na.rm = TRUE))
+
+# Plot the median WBL score by Income Group
+ggplot(income_group_median_wbl, aes(x = Income.Group, y = median_wbl, fill = Income.Group)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    labs(title = "Median WBL Score by Income Group", 
+             x = "Income Group", 
+             y = "Median WBL Score") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("income_group_median_wbl.png")
+
+```
+
+```{r}
+# Calculate mean WBL score by Income Group
+income_group_mean_wbl <- df %>%
+    filter(Income.Group != "Not classified") %>%
+    group_by(Income.Group) %>%
+    summarise(mean_wbl = mean(WBL.INDEX, na.rm = TRUE))
+
+# Define the order of income levels
+income_levels <- c("Low income", "Lower middle income", "Upper middle income", "High income")
+
+# Plot the mean WBL score by Income Group
+ggplot(income_group_mean_wbl, aes(x = factor(Income.Group, levels = income_levels), y = mean_wbl, fill = Income.Group)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    labs(title = "Mean WBL Score by Income Group", 
+             x = "Income Group", 
+             y = "Mean WBL Score") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title = element_text(hjust=0.5, face = "bold"))
+
+ggsave("income_group_mean_wbl.png")
+```
+
+```{r}
+# Grouping GDP and comparing to WBL
+df <- df %>%
+    mutate(GDP_Bucket = cut(gdp_per_person_employed, 
+                            breaks = quantile(gdp_per_person_employed, probs = seq(0, 1, by = 0.25), na.rm = TRUE), 
+                            include.lowest = TRUE, 
+                            labels = c("Low GDP", "Lower middle GDP", "Upper middle GDP", "High GDP")))
+
+# Calculate mean WBL score by GDP Bucket
+gdp_bucket_mean_wbl <- df %>%
+    filter(!is.na(GDP_Bucket)) %>%
+    group_by(GDP_Bucket) %>%
+    summarise(mean_wbl = mean(WBL.INDEX, na.rm = TRUE))
+
+# Plot the mean WBL score by GDP Bucket
+ggplot(gdp_bucket_mean_wbl, aes(x = GDP_Bucket, y = mean_wbl, fill = GDP_Bucket)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    labs(title = "Mean WBL Score by GDP Bucket", 
+             x = "GDP Bucket", 
+             y = "Mean WBL Score") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title = element_text(hjust=0.5, face = "bold"))
+
+ggsave("gdp_bucket_mean_wbl.png")
+
+```
+
+```{r}
+# Grouping GNI and comparing to WBL
+df <- df %>%
+    mutate(GNI_Bucket = cut(GNI.per.capita, 
+                            breaks = quantile(GNI.per.capita, probs = seq(0, 1, by = 0.25), na.rm = TRUE), 
+                            include.lowest = TRUE, 
+                            labels = c("Low GNI", "Lower middle GNI", "Upper middle GNI", "High GNI")))
+
+# Calculate mean WBL score by GNI Bucket
+gni_bucket_mean_wbl <- df %>%
+    filter(!is.na(GNI_Bucket)) %>%
+    group_by(GNI_Bucket) %>%
+    summarise(mean_wbl = mean(WBL.INDEX, na.rm = TRUE))
+
+# Plot the mean WBL score by GNI Bucket
+ggplot(gni_bucket_mean_wbl, aes(x = GNI_Bucket, y = mean_wbl, fill = GNI_Bucket)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    labs(title = "Mean WBL Score by GNI Bucket", 
+             x = "GNI Bucket", 
+             y = "Mean WBL Score") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title = element_text(hjust=0.5, face = "bold"))
+
+ggsave("gni_bucket_mean_wbl.png")
+```
+
+```{r}
+# Count of regions with income group distribution
+region_income_counts <- df %>%
+    group_by(Region, Income.Group) %>%
+    summarise(count = n(), .groups = "drop")
+
+# Define the order of income levels
+income_levels <- c("Low income", "Lower middle income", "Upper middle income", "High income")
+
+# Plot the count of regions with income group distribution
+ggplot(region_income_counts, aes(x = Region, y = count, fill = factor(Income.Group, levels = income_levels))) +
+    geom_bar(stat = "identity", position = "stack") +
+    scale_x_discrete(labels = ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Count of Countries by Region and Income Group", 
+         x = "Region", 
+         y = "Count of Countries", 
+         fill = "Income Group") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title = element_text(hjust=0.5, face = "bold"))
+
+ggsave("region_income_counts.png")
+
+```
+
+```{r}
+# Count of countries in each region
+region_counts <- df %>%
+    group_by(Region) %>%
+    summarise(count = n(), .groups = "drop")
+
+# Plot the count of countries in each region
+ggplot(region_counts, aes(x = Region, y = count, fill = Region)) +
+    geom_bar(stat = "identity") +
+    theme_minimal() +
+    labs(title = "Count of Countries by Region", 
+         x = "Region", 
+         y = "Count of Countries") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title = element_text(hjust = 0.5, face = "bold"),
+          legend.position = "none")
+
+ggsave("region_counts.png")
+```
+
+```{r}
+# Perform ANOVA test for WBL index score and Income Group
+anova_result <- aov(WBL.INDEX ~ Income.Group, data = df %>% filter(!is.na(Income.Group)))
+summary(anova_result)
+
+# Perform ANOVA test for WBL index score and Income Group without the High income group
+anova_result <- aov(WBL.INDEX ~ Income.Group, data = df %>% filter(Income.Group != "High income", !is.na(Income.Group)))
+summary(anova_result)
+
+# Perform ANOVA test for WBL index score and GDP
+anova_result <- aov(WBL.INDEX ~ GDP_Bucket, data = df %>% filter(!is.na(Income.Group)))
+summary(anova_result)
+
+# Perform ANOVA test for WBL index score and GDP without the High income group
+anova_result <- aov(WBL.INDEX ~ GDP_Bucket, data = df %>% filter(Income.Group != "High income", !is.na(Income.Group)))
+summary(anova_result)
+
+```
+
+```{r}
+# Scatterplot of GDP and WBL index with exponential and linear lines of best fit
+ggplot(df, aes(x = WBL.INDEX, y = gdp_per_person_employed / 1000)) +
+    geom_point(color = "blue", alpha = 0.7) +
+    # Polynomial regression
+    geom_smooth(
+        method = "lm", 
+        formula = y ~ poly(x, 2),  # Use a degree-2 polynomial (quadratic)
+        se = FALSE, 
+        color = "red", 
+        linetype = "dashed"
+    ) +
+    labs(
+        title = "GDP per Person Employed vs WBL Index",
+        x = "WBL Index",
+        y = "GDP per Person Employed (in thousands)"
+    ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text = element_text(size = 12)
+    )
+
+# Save the plot as a PNG file
+ggsave("gdp_wbl_polynomial_fit.png")
+
+```
+
+```{r}
+# Scatterplot of GDP and WBL index with exponential and linear lines of best fit
+ggplot(df %>% filter(Income.Group != "High income"), aes(x = WBL.INDEX, y = gdp_per_person_employed / 1000)) +
+    geom_point(color = "blue", alpha = 0.7) +
+    # Polynomial regression
+    geom_smooth(
+        method = "lm", 
+        formula = y ~ poly(x, 2),  # Use a degree-2 polynomial (quadratic)
+        se = FALSE, 
+        color = "red", 
+        linetype = "dashed"
+    ) +
+    labs(
+        title = "GDP per Person Employed vs WBL Index (Excluding High Income Countries)",
+        x = "WBL Index",
+        y = "GDP per Person Employed (in thousands)"
+    ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text = element_text(size = 12)
+    )
+
+# Save the plot as a PNG file
+ggsave("gdp_wbl_polynomial_fit_excluding_high_income.png")
+
+```
+
+```{r}
+# Calculate the maximum GDP per person employed
+max_gdp <- max(df$gdp_per_person_employed, na.rm = TRUE)
+print(max_gdp)
+```
+
+```{r}
+# Scatterplot of GNI and WBL index with exponential and linear lines of best fit
+ggplot(df, aes(x = WBL.INDEX, y = GNI.per.capita / 1000)) +
+    geom_point(color = "blue", alpha = 0.7) +
+    # Polynomial regression
+    geom_smooth(
+        method = "lm", 
+        formula = y ~ poly(x, 2),  # Use a degree-2 polynomial (quadratic)
+        se = FALSE, 
+        color = "red", 
+        linetype = "dashed"
+    ) +
+    labs(
+        title = "GNI per Capita vs WBL Index",
+        x = "WBL Index",
+        y = "GNI per Capita (in thousands)"
+    ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text = element_text(size = 12)
+    )
+
+# Save the plot as a PNG file
+ggsave("gni_wbl_polynomial_fit.png")
+```
+
+```{r}
+# Scatterplot of GNI and WBL index with exponential and linear lines of best fit
+ggplot(df %>% filter(Income.Group != "High income"), aes(x = WBL.INDEX, y = GNI.per.capita / 1000)) +
+    geom_point(color = "blue", alpha = 0.7) +
+    # Polynomial regression
+    geom_smooth(
+        method = "lm", 
+        formula = y ~ poly(x, 2),  # Use a degree-2 polynomial (quadratic)
+        se = FALSE, 
+        color = "red", 
+        linetype = "dashed"
+    ) +
+    labs(
+        title = "GNI per Capita vs WBL Index (Excluding High Income Countries)",
+        x = "WBL Index",
+        y = "GNI per Capita (in thousands)"
+    ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text = element_text(size = 12)
+    )
+
+# Save the plot as a PNG file
+ggsave("gni_wbl_polynomial_fit_excluding_high_income.png")
+
+```
