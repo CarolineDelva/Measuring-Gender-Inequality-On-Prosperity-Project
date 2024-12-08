@@ -11,6 +11,7 @@ library(ggplot2)
 library(plotly)
 
 df <- read.csv('data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv')
+df <- df %>% filter(Income.Group != "Not classified")
 ```
 
 ```{r}
@@ -394,13 +395,106 @@ ggsave("region_counts.png")
 ```
 
 ```{r}
+#skip block
 # Perform ANOVA test for WBL index score and Income Group
 anova_result <- aov(WBL.INDEX ~ Income.Group, data = df %>% filter(!is.na(Income.Group)))
 summary(anova_result)
 
+# Define the order of income levels
+income_levels <- c("Low income", "Lower middle income", "Upper middle income", "High income")
+
+# Calculate mean WBL score by Income Group
+income_group_mean_wbl <- df %>%
+    filter(!is.na(Income.Group)) %>%
+    group_by(Income.Group) %>%
+    summarise(mean_wbl = mean(WBL.INDEX, na.rm = TRUE))
+
+# Plot the mean WBL score by Income Group with individual points
+ggplot(df %>% filter(!is.na(Income.Group)), aes(x = factor(Income.Group, levels = income_levels), y = WBL.INDEX, color = Income.Group)) +
+    geom_point(position = position_jitter(width = 0.2), alpha = 0.6) +
+    geom_line(data = income_group_mean_wbl, aes(x = factor(Income.Group, levels = income_levels), y = mean_wbl, group = 1), color = "black", size = 1) +
+    geom_point(data = income_group_mean_wbl, aes(x = factor(Income.Group, levels = income_levels), y = mean_wbl), color = "black", size = 3) +
+    theme_minimal() +
+    labs(title = "WBL Scores by Income Group", 
+         x = "Income Group", 
+         y = "WBL Score") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title = element_text(hjust = 0.5, face = "bold"))
+
+ggsave("income_group_wbl_scores.png")
+```
+
+```{r}
+unique(df$Income.Group)
+```
+
+```{r}
+#trying different style of graph
+df <- df %>% filter(Income.Group != "Not classified")
+income_levels <- c("Low income", "Lower middle income", "Upper middle income", "High income")
+
+income_group_mean_wbl <- df %>%
+    filter(!is.na(Income.Group)) %>%
+    group_by(Income.Group) %>%
+    summarise(mean_wbl = mean(WBL.INDEX, na.rm = TRUE))
+
+# Plot the mean WBL score by Income Group with individual points and vertical mean lines
+ggplot(df, aes(x = WBL.INDEX, color = Income.Group)) +
+    # Add individual data points
+    geom_point(aes(y = factor(Income.Group, levels = income_levels)), position = position_jitter(width = 0.2, height = 0), alpha = 0.6) +
+    # Add vertical mean lines with legend
+    geom_vline(data = income_group_mean_wbl, aes(xintercept = mean_wbl, color = Income.Group), linetype = "solid", size = 1, show.legend = TRUE) +
+    # Customize colors
+    scale_color_manual(
+        values = c("Low income" = "blue", 
+                   "Lower middle income" = "green", 
+                   "Upper middle income" = "red", 
+                   "High income" = "orange"),
+        name = "Income Group\nMean Lines"
+    ) +
+    theme_minimal() +
+    labs(
+        title = "WBL Scores by Income Group", 
+        x = "WBL Score", 
+        y = "Income Group"
+    ) +
+    theme(
+        axis.text = element_text(size = 14),          # Increase size of axis tick labels
+        axis.title = element_text(size = 16, face = "bold"),  # Increase size of axis titles
+        plot.title = element_text(size = 20, hjust = 0.5, face = "bold"), # Increase size of title
+        legend.text = element_text(size = 14),       # Increase size of legend text
+        legend.title = element_text(size = 16, face = "bold"), # Increase size of legend title
+        legend.position = "top"                      # Place legend at the top
+    )
+
+ggsave("anova_income_group_wbl_scores.png", width = 12, height = 10)
+```
+
+```{r}
+# df without missing income group
+anova_result_income_wbl_all <- aov(WBL.INDEX ~ Income.Group, data = df)
+summary(anova_result_income_wbl_all)
+```
+
+```{r}
+
 # Perform ANOVA test for WBL index score and Income Group without the High income group
-anova_result <- aov(WBL.INDEX ~ Income.Group, data = df %>% filter(Income.Group != "High income", !is.na(Income.Group)))
-summary(anova_result)
+anova_result_income_wbl_wo_high <- aov(WBL.INDEX ~ Income.Group, data = df %>% filter(Income.Group != "High income"))
+summary(anova_result_income_wbl_wo_high)
+```
+
+```{r}
+tukey_results <- TukeyHSD(anova_result_income_wbl_all)
+print(tukey_results)
+```
+
+```{r}
+tukey_results <- TukeyHSD(anova_result_income_wbl_wo_high)
+print(tukey_results)
+
+```
+
+```{r}
 
 # Perform ANOVA test for WBL index score and GDP
 anova_result <- aov(WBL.INDEX ~ GDP_Bucket, data = df %>% filter(!is.na(Income.Group)))
@@ -534,5 +628,116 @@ ggplot(df %>% filter(Income.Group != "High income"), aes(x = WBL.INDEX, y = GNI.
 
 # Save the plot as a PNG file
 ggsave("gni_wbl_polynomial_fit_excluding_high_income.png")
+
+```
+
+
+```{r}
+### permutation tests
+perm_diff <- function() {
+    permuted_with <- sample(df$WBL_Group)
+    mean(df$gdp_per_person_employed[permuted_with == "High"], na.rm = TRUE) -
+    mean(df$gdp_per_person_employed[permuted_with == "Low"], na.rm = TRUE) 
+}
+
+df$WBL_Group <- ifelse(df$WBL.INDEX >= median(df$WBL.INDEX, na.rm = TRUE), "High", "Low")
+
+df$WBL_Group <- factor(df$WBL_Group)
+
+unique(df$WBL_Group)
+table(df$WBL_Group)
+
+# observed difference in gdp means with high income
+observed_diff_with <- mean(df$gdp_per_person_employed[df$WBL_Group == "High"], na.rm = TRUE) -
+    mean(df$gdp_per_person_employed[df$WBL_Group == "Low"], na.rm = TRUE)
+
+# permutation test
+perm_diff_with <- replicate(5000, perm_diff())
+
+# # calculate p value
+# p_value_with <- mean(abs(perm_diff_with) >= abs(observed_diff_with))
+
+# plot histogram of permutation test results
+ggplot(data.frame(perm_diff_with), aes(x = perm_diff_with)) +
+    geom_histogram(binwidth = 500, fill = "lightblue", color = "black") +
+    geom_vline(xintercept = observed_diff_with, color = "red", linetype = "dashed", size = 1.2) +
+    annotate("text", x = observed_diff_with, y = 20, label = "Observed\nDifference", color = "red", angle = 90, vjust = -0.5, size = 5) +
+    labs(title = "Permutation Test: GDP Difference by WBL Group",
+         x = "Difference in Mean GDP (High - Low WBL Group)",
+         y = "Frequency") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+          axis.text = element_text(size = 16),
+          axis.title = element_text(size = 17))
+
+ggsave("perm_hist.png")
+# print observed difference and p-value
+# cat("Observed difference: ", observed_diff_with, "\n")
+# cat("P-value: ", p_value_with, "\n")
+
+# #print observed difference
+# cat("Observed difference: ", observed_diff_with)
+```
+
+```{r}
+simulate_sample_mean <- function(N, mu, sigma) {
+    samples <- rnorm(N, mu, sigma)
+    sample_mean <- mean(samples)
+    return(sample_mean)
+}
+N <- 16
+obs_sample_mean <- 31531.09
+num_reps <- 10000
+sample_means <- as_tibble(replicate(num_reps, simulate_sample_mean(N, hyp_mu, sigma)))
+asymp_dnorm <- function(x) dnorm((x - hyp_mu)/(sigma / sqrt(N)), 0, 1)
+ggplot() +
+  geom_histogram(
+    data=sample_means,
+    aes(x=value, y=5*after_stat(density)),
+    binwidth=1) +
+  stat_function(
+    data=data.frame(x=c(100,140)),
+    aes(x=x, color='asymp'),
+    fun=asymp_dnorm,
+    linewidth = g_linewidth
+  ) +
+  geom_segment(
+    aes(x = obs_sample_mean, xend=obs_sample_mean, y=-Inf, yend=Inf, color='obs'),
+    linewidth = g_linewidth
+  ) +
+  dsan_theme("half") +
+  labs(
+    x = "Simulated Sample Mean",
+    y = "(Empirical) Density",
+    title = paste0(num_reps," Simulated Sample Means, N = 16")
+  ) +
+  scale_color_manual(values=c('asymp'='black', 'obs'=cbPalette[1]), labels=c('asymp'='Asymptotic\nDistribution', 'obs'='Observed\nSample Mean')) +
+  remove_legend_title()
+```
+
+```{r}
+## monte carlo simulation
+#function to simulation gdp based on wbl index
+simulation_gdp <- function(data, n_sim) {
+  results <- replicate(n_sim, {
+    #sample wbl index values with replacement
+    sampled_index <- sample(data$WBL.INDEX, size = nrow(data), replace = TRUE)
+    
+    #simulate gdp (linear model with noise)
+    simulated_gdp <- 500 * sampled_index + rnorm(nrow(data), mean = 0, sd = 10000)
+    mean(simulated_gdp) #return mean gdp for simulation
+  })
+  return(results)
+}
+
+#simulate for both datasets
+gdp_with <- simulation_gdp(df, 10000)
+#gdp_without <- simulation_gdp(clean_df_without, 10000)
+
+#summarize results
+print("Monte Carlo Including High Income Group:")
+summary(gdp_with)
+# print("Monte Carlo Excluding High Income Group:")
+# summary(gdp_without)
 
 ```
