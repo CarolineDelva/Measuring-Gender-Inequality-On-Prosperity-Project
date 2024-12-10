@@ -43,7 +43,37 @@ gdp_summary <- df %>%
 
 gdp_summary
 
+# summary stats for gdp data
+gni_summary <- df %>%
+    group_by(Region) %>%
+    summarise(
+        Mean_GNI_Score = mean(GNI.per.capita, na.rm = TRUE),
+        Median_GNI_Score = median(GNI.per.capita, na.rm = TRUE),
+        SD_GNI_Score = sd(GNI.per.capita, na.rm = TRUE)
+    )
 
+gni_summary
+
+# summary stats for wbl data
+wbl_summary <- df %>%
+    group_by(Region) %>%
+    summarise(
+        Mean_wbl_Score = mean(WBL.INDEX, na.rm = TRUE),
+        Median_wbl_Score = median(WBL.INDEX, na.rm = TRUE),
+        SD_wbl_Score = sd(WBL.INDEX, na.rm = TRUE)
+    )
+
+wbl_summary
+
+ggplot(df, aes(x = Region)) +
+    geom_bar(stat = "count", fill = "skyblue") +
+    geom_text(aes(label = ..count..), stat = "count", vjust = -0.5) +
+    labs(
+        title = "Distribution of Regions within Data",
+        x = "Region",
+        y = "Count"
+    ) +
+    theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 45, hjust = 1))
 
 # summary stats for mobility data
 mobility_summary <- df %>%
@@ -56,6 +86,16 @@ mobility_summary <- df %>%
 
 mobility_summary
 
+
+
+ggplot(df, aes(x = Region, y = WBL.INDEX)) +
+    geom_bar(stat = "identity", fill = "skyblue")  +
+    labs(
+        title = "Distribution of WBL Score",
+        x = "Region",
+        y = "WBL"
+    ) +
+    theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
  
@@ -122,14 +162,20 @@ count_over_threshold_region <- df %>%
 count_over_threshold_region
 ```
 
-```{r}
+
 ```{r}
 threshold_score <- 80
 count_over_threshold_region <- df %>%
-    filter(WBL.INDEX >= threshold_score) %>% filter(Region == 'Middle East & North Africa')
+    filter(WBL.INDEX >= threshold_score) %>%
+    filter(Region == "Middle East & North Africa")
 count_over_threshold_region
+
+perfect_score <- 100
+count_perfect_region <- df %>%
+    filter(WBL.INDEX == perfect_score)
+nrow(count_perfect_region)
 ```
-```
+
 
 ```{r}
 ## distribution of mobility scores
@@ -161,12 +207,25 @@ ggplot(df, aes(x = MOBILITY, )) +
     theme(plot.title = element_text(hjust = 0.5)) +
     scale_x_continuous(breaks = seq(0, 100, by = 20))
 
+
+
+scored_indicators <- df |> select(MOBILITY, WORKPLACE, PAY, MARRIAGE, PARENTHOOD, ENTREPRENEURSHIP, ASSETS, PENSION, )
+
+data_long <- gather(scored_indicators, key = "variable", value = "value")
+
+# Faceted plot showing distribution for each variable
+ggplot(data_long, aes(x = value)) +
+    geom_histogram(binwidth = 20, fill = "skyblue", color = "black") +
+    facet_wrap(~variable, scales = "free") +
+    labs(title = "Distribution of Scored Indicators", x = "Value", y = "Frequency") +
+    theme_minimal()
+
 ```
 
 
 ```{r}
 # compare mobility score across regions
-boxplot <- ggplot(df, aes(x = Region, y = MOBILITY, fill = Region)) +
+ggplot(df, aes(x = Region, y = MOBILITY, fill = Region)) +
     geom_boxplot() +
     scale_x_discrete(labels = region_labels) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -174,6 +233,16 @@ boxplot <- ggplot(df, aes(x = Region, y = MOBILITY, fill = Region)) +
 
 ```
 
+
+```{r}
+# compare wbl score across regions
+ggplot(df, aes(x = Region, y = WBL.INDEX, fill = Region)) +
+    geom_boxplot() +
+    scale_x_discrete(labels = region_labels) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "WBL Scores by Region", x = "Region", y = "WBL Score")
+
+```
 
 
 
