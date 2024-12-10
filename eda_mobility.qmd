@@ -11,6 +11,13 @@ library(plotly)
 library(tidyverse)
 
 df <- read.csv('data/processed-data/gender_inequality_and_economic_indicators_dataset_clean_final.csv')
+
+dim(df)
+str(df)
+summary(df)
+
+
+
 ```
 
 
