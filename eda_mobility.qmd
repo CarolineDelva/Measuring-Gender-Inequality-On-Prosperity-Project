@@ -217,8 +217,7 @@ data_long <- gather(scored_indicators, key = "variable", value = "value")
 ggplot(data_long, aes(x = value)) +
     geom_histogram(binwidth = 20, fill = "skyblue", color = "black") +
     facet_wrap(~variable, scales = "free") +
-    labs(title = "Distribution of Scored Indicators", x = "Value", y = "Frequency") +
-    theme_minimal()
+    labs(title = "Distribution of Scored Indicators", x = "Value", y = "Frequency") + theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
