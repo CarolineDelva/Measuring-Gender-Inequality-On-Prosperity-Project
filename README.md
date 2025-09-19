@@ -44,7 +44,6 @@ A concise, data-driven look at how **legal gender equality** relates to **econom
 
 ## Repo Guide
 .
-.
 ├─ README.md
 ├─ .gitignore
 ├─ analysis/
@@ -83,34 +82,6 @@ A concise, data-driven look at how **legal gender equality** relates to **econom
 
 
 ---
-
-## Quickstart
-```bash
-# 1) Setup
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt  # pandas, numpy, scipy, statsmodels, scikit-learn, matplotlib/plotly, jupyter
-
-# 2) Place raw data
-#   - WBL 2018 extract
-#   - World Bank macro indicators (2018)
-# into data/raw/
-
-# 3) Build analysis table
-python -m src.clean_merge  # writes data/processed/merged_2018.csv
-
-# 4) Run notebooks
-jupyter lab
-Reference Stats (for readers)
-ANOVA (all groups): F=13.8, p<0.05
-
-Tukey (all groups): High-income > Low (+21.55, p<0.05); > Lower-middle (+16.21, p<0.05); > Upper-middle (+8.36, p<0.05)
-
-Permutation (all groups): GDP/worker Δ≈$31,531, p≈0
-
-ANOVA (excl. high-income): F=5.47, p=0.00145
-
-Permutation (excl. high-income): Δ≈$1,651, p=0.758 (ns)
-
 
 Data: World Bank — Women, Business and the Law (WBL); World Bank economic indicators (2018).
 
